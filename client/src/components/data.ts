@@ -1,44 +1,50 @@
-import { Award, Medal, Star, Trophy } from "lucide-react";
-
-export const achievements = [
+type Achievement = {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  year: string;
+  metric?: string;
+};
+export const achievements: Achievement[] = [
   {
     id: 1,
-    title: "Specialty Coffee Association Award",
-    description: "Recognized for excellence in Ethiopian coffee production and export quality standards.",
+    title: "International Coffee Excellence Award",
+    description: "Recognized for our exceptional coffee quality and sustainable farming practices by the International Coffee Association.",
+    image: "https://images.unsplash.com/photo-1581091007718-0c50d599bdf0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1050&q=80",
     year: "2023",
-    image: "https://images.unsplash.com/photo-1587895021706-3c868a9b51f9?auto=format&fit=crop&q=80&w=2080",
-    icon: Award,
-    color: "bg-amber-500",
-    detail: "This prestigious award recognizes our commitment to maintaining the highest standards in coffee production across all our farms in Ethiopia."
+    metric: "Top 3% of coffee producers worldwide"
   },
   {
     id: 2,
-    title: "Sustainable Farming Certification",
-    description: "For implementing environmentally responsible farming practices and supporting local communities.",
+    title: "Ethiopian Heritage Preservation",
+    description: "Commended for our efforts in preserving traditional Ethiopian coffee cultivation methods while supporting local communities.",
+    image: "https://images.unsplash.com/photo-1598512752271-33f913a5af13?ixlib=rb-4.0.3&auto=format&fit=crop&w=1050&q=80",
     year: "2022",
-    image: "https://images.unsplash.com/photo-1611854779393-1b2da9d400fe?auto=format&fit=crop&q=80",
-    icon: Star,
-    color: "bg-emerald-500",
-    detail: "Our sustainable farming practices ensure ecological balance while supporting over 500 local families with fair wages and educational opportunities."
+    metric: "15,000+ farmers supported"
   },
   {
     id: 3,
-    title: "Global Export Excellence",
-    description: "Recognized by the Ethiopian Coffee Exporters Association for outstanding international export performance.",
+    title: "Sustainability Leadership Award",
+    description: "Honored for implementing eco-friendly practices throughout our entire production chain, from farming to packaging.",
+    image: "https://images.unsplash.com/photo-1504567961542-e24d9439a724?ixlib=rb-4.0.3&auto=format&fit=crop&w=1050&q=80",
     year: "2021",
-    image: "https://images.unsplash.com/photo-1580933073521-dc51f22e6b8f?auto=format&fit=crop&q=80&w=2069",
-    icon: Trophy,
-    color: "bg-blue-500",
-    detail: "Tadegg exports premium coffee to over 30 countries worldwide, consistently meeting the highest quality standards and delivery timelines."
+    metric: "40% reduction in carbon footprint"
   },
   {
     id: 4,
-    title: "Coffee Quality Champion",
-    description: "First place in the national cupping competition for our Yirgacheffe coffee variety.",
+    title: "Farm-to-Cup Transparency",
+    description: "Recognized for our commitment to complete transparency in our supply chain, ensuring fair compensation for all involved.",
+    image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?ixlib=rb-4.0.3&auto=format&fit=crop&w=1050&q=80",
     year: "2020",
-    image: "https://images.unsplash.com/photo-1542834291-c514e77b215f?auto=format&fit=crop&q=80&w=1974",
-    icon: Medal,
-    color: "bg-rose-500",
-    detail: "Our signature Yirgacheffe blend scored an exceptional 92 points out of 100 in blind taste tests conducted by international coffee experts."
+    metric: "100% traceable coffee beans"
+  },
+  {
+    id: 5,
+    title: "Coffee Innovation Excellence",
+    description: "Awarded for our pioneering processing techniques that enhance the natural flavors of Ethiopian coffee varieties.",
+    image: "https://images.unsplash.com/photo-1599639668519-bfe581fae88b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1050&q=80",
+    year: "2019",
+    metric: "5 proprietary processing methods"
   },
 ];

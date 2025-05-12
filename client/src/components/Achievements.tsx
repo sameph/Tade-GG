@@ -1,406 +1,501 @@
-import { useState, useRef, useCallback } from "react";
-import { cn } from "@/lib/utils";
-import { Trophy, Award, Star, Medal, ExternalLink } from "lucide-react";
-import { useInView } from "react-intersection-observer";
-import Autoplay from "embla-carousel-autoplay";
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { cn } from '@/lib/utils';
 import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
+  HoverCard, 
+  HoverCardTrigger, 
+  HoverCardContent
 } from "@/components/ui/hover-card";
-import { achievements } from "./data"; // Your data import
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { ArrowRight, ArrowLeft } from "lucide-react";
+import useEmblaCarousel from "embla-carousel-react";
+import { Progress } from "@/components/ui/progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { achievements } from './data';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const AUTO_SCROLL_INTERVAL = 7000; // Slightly longer interval for better UX
+const TRANSITION_DURATION = 1000; // For smooth animations
 
 const AchievementsSection = () => {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [selectedAchievement, setSelectedAchievement] = useState<
-    (typeof achievements)[0] | null
-  >(null);
-  const carouselApi = useRef<any>(null);
-  const { ref: sectionRef, inView } = useInView({
-    threshold: 0.1,
-    triggerOnce: true,
+  const [activeIndex, setActiveIndex] = useState<number>(0);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true, 
+    align: "center",
+    duration: TRANSITION_DURATION / 1000 // Convert to seconds
   });
+  const [progress, setProgress] = useState<number>(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [direction, setDirection] = useState<'next' | 'prev'>('next');
+  const progressRef = useRef<number>(0);
 
-  const autoplay = useRef(
-    Autoplay({ delay: 5000, stopOnInteraction: true, playOnInit: true })
-  );
+  // Memoized scroll handlers
+  const scrollNext = useCallback(() => {
+    setDirection('next');
+    emblaApi?.scrollNext();
+  }, [emblaApi]);
 
-  const onApiChange = useCallback((api: any) => {
-    carouselApi.current = api;
-    api.on("select", () => {
-      setActiveIndex(api.selectedScrollSnap());
-    });
-  }, []);
+  const scrollPrev = useCallback(() => {
+    setDirection('prev');
+    emblaApi?.scrollPrev();
+  }, [emblaApi]);
+
+  // Handle auto-scrolling with smooth progress animation
+  useEffect(() => {
+    if (!emblaApi || isPaused) return;
+
+    let animationFrameId: number;
+    let startTime: number;
+
+    const updateProgress = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      progressRef.current = Math.min(100, (elapsed / AUTO_SCROLL_INTERVAL) * 100);
+      setProgress(progressRef.current);
+
+      if (!isPaused && elapsed < AUTO_SCROLL_INTERVAL) {
+        animationFrameId = requestAnimationFrame(updateProgress);
+      }
+    };
+
+    const handleAutoScroll = () => {
+      scrollNext();
+      startTime = 0;
+      animationFrameId = requestAnimationFrame(updateProgress);
+    };
+
+    // Clear existing interval and animation frame
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+    // Initialize
+    intervalRef.current = setInterval(handleAutoScroll, AUTO_SCROLL_INTERVAL);
+    animationFrameId = requestAnimationFrame(updateProgress);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    };
+  }, [emblaApi, isPaused, scrollNext]);
+
+  // Handle slide selection
+  useEffect(() => {
+    if (!emblaApi) return;
+
+    const onSelect = () => {
+      const newIndex = emblaApi.selectedScrollSnap();
+      setActiveIndex(newIndex);
+      setProgress(0);
+      progressRef.current = 0;
+    };
+
+    emblaApi.on('select', onSelect);
+    return () => emblaApi.off('select', onSelect);
+  }, [emblaApi]);
+
+  const handleSlideClick = useCallback((index: number) => {
+    if (!emblaApi) return;
+    
+    setDirection(index > activeIndex ? 'next' : 'prev');
+    emblaApi.scrollTo(index);
+  }, [emblaApi, activeIndex]);
 
   const handleMouseEnter = useCallback(() => {
     setIsPaused(true);
-    autoplay.current.stop();
+    setProgress(progressRef.current); // Keep current progress value
   }, []);
 
   const handleMouseLeave = useCallback(() => {
     setIsPaused(false);
-    autoplay.current.play();
   }, []);
 
-  const handleIndicatorClick = useCallback((index: number) => {
-    carouselApi.current?.scrollTo(index);
-  }, []);
-
-  const openDetailModal = useCallback(
-    (achievement: (typeof achievements)[0]) => {
-      setSelectedAchievement(achievement);
+  // Animation variants for entrance effects
+  const slideVariants = {
+    enter: (direction: 'next' | 'prev') => ({
+      x: direction === 'next' ? '100%' : '-100%',
+      opacity: 0
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        x: { type: 'spring', stiffness: 300, damping: 30 },
+        opacity: { duration: 0.2 }
+      }
     },
-    []
-  );
-
-  const closeDetailModal = useCallback(() => {
-    setSelectedAchievement(null);
-  }, []);
+    exit: (direction: 'next' | 'prev') => ({
+      x: direction === 'next' ? '-100%' : '100%',
+      opacity: 0,
+      transition: {
+        x: { type: 'spring', stiffness: 300, damping: 30 },
+        opacity: { duration: 0.2 }
+      }
+    })
+  };
 
   return (
-    <section
-      ref={sectionRef}
-      className="py-20 md:py-28 lg:py-32 bg-gradient-to-br from-tadegg-cream/95 via-tadegg-cream/90 to-white overflow-hidden relative isolate"
+    <motion.section
       id="achievements"
+      className="relative overflow-hidden bg-gradient-to-br from-tadegg-cream/95 to-white/95 py-24"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.8 }}
     >
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
-        {/* Floating circles */}
-        <div
-          className={cn(
-            "absolute top-20 -left-20 w-40 h-40 rounded-full border-[12px] border-tadegg-green/5 transition-all duration-1000",
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10",
-            "animate-float"
-          )}
-        />
-        <div
-          className={cn(
-            "absolute bottom-40 -right-10 w-32 h-32 rounded-full border-[8px] border-tadegg-burgundy/5 transition-all duration-1000 delay-300",
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10",
-            "animate-float animation-delay-300"
-          )}
-        />
-
-        {/* Coffee bean shapes */}
-        <div
-          className={cn(
-            "absolute top-1/4 right-1/4 w-40 h-72 rounded-b-full rounded-t-full rotate-45 border-2 border-tadegg-green/10 transition-all duration-1000 delay-500",
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10",
-            "animate-float animation-delay-600"
-          )}
-        />
-
-        {/* Subtle grid pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-10" />
-      </div>
-
-      <div
-        className={cn(
-          "container mx-auto px-4 relative z-10",
-          inView ? "animate-fade-in" : ""
-        )}
-      >
-        {/* Section header */}
-        <div className="text-center mb-16 md:mb-20 lg:mb-24">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-tadegg-brown relative inline-block">
-            <span
-              className={cn(
-                "relative inline-block",
-                inView
-                  ? "animate-text-reveal [animation-fill-mode:backwards]"
-                  : "opacity-0"
-              )}
-            >
-              Our Achievements
-              <span
-                className={cn(
-                  "absolute -bottom-2 left-0 h-1.5 bg-tadegg-burgundy rounded-full transition-all duration-1000",
-                  inView ? "w-full" : "w-0"
-                )}
-              />
-            </span>
-          </h2>
-          <p
-            className={cn(
-              "text-lg sm:text-xl text-tadegg-brown/80 mt-4 max-w-2xl mx-auto transition-all duration-700 delay-300",
-              inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-            )}
-          >
-            Recognized excellence in Ethiopian coffee production and export
-          </p>
-        </div>
-
-        {/* Carousel */}
-        <div
-          className="relative"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
+      {/* Enhanced decorative elements with animation */}
+      <motion.div 
+        className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white to-transparent opacity-40"
+        animate={{ opacity: [0.3, 0.4, 0.3] }}
+        transition={{ duration: 8, repeat: Infinity, repeatType: "reverse" }}
+      />
+      <motion.div 
+        className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-white to-transparent opacity-40"
+        animate={{ opacity: [0.3, 0.4, 0.3] }}
+        transition={{ duration: 8, repeat: Infinity, repeatType: "reverse", delay: 2 }}
+      />
+      <motion.div 
+        className="absolute -left-32 top-1/3 w-96 h-96 rounded-full bg-tadegg-gold opacity-5"
+        animate={{
+          scale: [1, 1.05, 1],
+          opacity: [0.05, 0.08, 0.05]
+        }}
+        transition={{
+          duration: 12,
+          repeat: Infinity,
+          repeatType: "reverse",
+          ease: "easeInOut"
+        }}
+      />
+      <motion.div 
+        className="absolute -right-20 bottom-1/4 w-96 h-96 rounded-full bg-tadegg-burgundy opacity-5"
+        animate={{
+          scale: [1, 1.06, 1],
+          opacity: [0.05, 0.09, 0.05]
+        }}
+        transition={{
+          duration: 14,
+          repeat: Infinity,
+          repeatType: "reverse",
+          ease: "easeInOut",
+          delay: 3
+        }}
+      />
+      <motion.div 
+        className="absolute left-1/4 bottom-0 w-48 h-48 rounded-full bg-tadegg-green opacity-5"
+        animate={{
+          y: [0, -20, 0],
+          opacity: [0.05, 0.07, 0.05]
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          repeatType: "reverse",
+          ease: "easeInOut",
+          delay: 1
+        }}
+      />
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <motion.div 
+          className="text-center mb-16"
+          initial={{ y: 20, opacity: 0 }}
+          whileInView={{ y: 0, opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-              duration: 50,
-            }}
-            plugins={[autoplay.current]}
-            className="w-full"
-            setApi={onApiChange}
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <motion.div 
+              className="h-[1px] w-12 bg-tadegg-gold"
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            />
+            <motion.h4 
+              className="text-tadegg-green font-serif italic tracking-wider"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              Recognition & Excellence
+            </motion.h4>
+            <motion.div 
+              className="h-[1px] w-12 bg-tadegg-gold"
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            />
+          </div>
+          <motion.h2 
+            className="section-title bg-clip-text text-transparent bg-gradient-to-r from-tadegg-burgundy to-tadegg-gold"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <CarouselContent>
-              {achievements.map((achievement, index) => (
-                <CarouselItem
-                  key={achievement.id}
-                  className="md:basis-1/2 lg:basis-1/3 pl-4 md:pl-6"
-                >
-                  <div
-                    className="h-full group"
-                    onMouseEnter={() => setHoveredIndex(index)}
-                    onMouseLeave={() => setHoveredIndex(null)}
-                  >
-                    <Card
+            Our Achievements
+          </motion.h2>
+          <motion.p 
+            className="section-subtitle max-w-2xl mx-auto"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            Celebrating our journey of excellence and recognition in the world of Ethiopian coffee.
+          </motion.p>
+        </motion.div>
+
+        <div className="relative">
+          {/* Achievement Counter */}
+          <TooltipProvider>
+            <motion.div 
+              className="hidden lg:flex absolute -left-4 top-1/2 transform -translate-y-1/2 flex-col items-center space-y-6 z-10"
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+            >
+              {achievements.map((_, idx) => (
+                <Tooltip key={idx}>
+                  <TooltipTrigger asChild>
+                    <motion.button
+                      aria-label={`View achievement ${idx + 1}`}
+                      onClick={() => handleSlideClick(idx)}
                       className={cn(
-                        "overflow-hidden border-none transition-all duration-500 h-full relative",
-                        "bg-white/90 backdrop-blur-sm shadow-lg hover:shadow-2xl hover:shadow-tadegg-burgundy/20",
-                        "hover:scale-[1.02] transform-gpu will-change-transform",
-                        "ring-1 ring-gray-200/50 hover:ring-tadegg-burgundy/30",
-                        hoveredIndex === index ? "z-10" : ""
+                        "w-4 h-4 rounded-full transition-all duration-300 relative",
+                        activeIndex === idx 
+                          ? "bg-tadegg-burgundy scale-125 shadow-lg shadow-tadegg-burgundy/20" 
+                          : "bg-gray-300 hover:bg-tadegg-gold"
                       )}
+                      whileHover={{ scale: 1.3 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      {/* Image with gradient overlay */}
-                      <div className="relative overflow-hidden aspect-[4/3]">
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60 z-10 opacity-70 group-hover:opacity-90 transition-opacity duration-500" />
-
-                        <img
-                          src={achievement.image}
-                          srcSet={`${achievement.image}?w=400 400w, ${achievement.image}?w=800 800w`}
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          alt={achievement.title}
-                          className="absolute h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 group-hover:brightness-110"
-                          loading="lazy"
-                          decoding="async"
+                      {activeIndex === idx && (
+                        <motion.span
+                          className="absolute inset-0 rounded-full border-2 border-tadegg-gold"
+                          initial={{ scale: 1.5, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ duration: 0.3 }}
                         />
-
-                        {/* Award icon */}
-                        <div className="absolute top-4 right-4 z-20">
-                          <div
-                            className={cn(
-                              "w-12 h-12 rounded-full flex items-center justify-center text-white transition-all duration-500",
-                              achievement.color,
-                              "shadow-lg group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-xl",
-                              "group-hover:[box-shadow:0_10px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)]"
-                            )}
-                          >
-                            <achievement.icon
-                              size={24}
-                              className="group-hover:animate-pulse group-hover:[animation-duration:2s]"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Year badge */}
-                        <div className="absolute bottom-4 left-4 z-20">
-                          <p className="text-white text-sm font-medium bg-tadegg-burgundy px-3 py-1.5 rounded-full shadow-md transition-all duration-500 group-hover:shadow-lg group-hover:translate-y-[-2px]">
-                            {achievement.year}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Card content */}
-                      <CardHeader className="p-5 pb-0 transition-all duration-300 group-hover:pt-6">
-                        <CardTitle className="text-xl font-serif font-bold tracking-tight transition-all duration-300 text-tadegg-brown group-hover:text-tadegg-burgundy">
-                          {achievement.title}
-                        </CardTitle>
-                      </CardHeader>
-
-                      <CardContent className="p-5 pt-3">
-                        <CardDescription className="text-tadegg-brown/80 transition-all duration-300 group-hover:text-tadegg-brown/90 text-[15px] leading-relaxed">
-                          {achievement.description}
-                        </CardDescription>
-                      </CardContent>
-
-                      <CardFooter className="p-5 pt-0">
-                        <HoverCard>
-                          <HoverCardTrigger asChild>
-                            <button
-                              className="flex items-center gap-1.5 text-sm font-medium transition-all duration-300 relative group text-tadegg-green hover:text-tadegg-burgundy"
-                              onClick={() => openDetailModal(achievement)}
-                            >
-                              Learn more
-                              <ExternalLink
-                                size={16}
-                                className="transition-all duration-300 group-hover:translate-x-1 group-hover:rotate-12"
-                              />
-                              <span className="absolute -bottom-0.5 left-0 h-[2px] bg-current transition-all duration-300 w-0 group-hover:w-full" />
-                            </button>
-                          </HoverCardTrigger>
-                          <HoverCardContent
-                            className="w-80 shadow-xl bg-white/95 backdrop-blur-sm border-tadegg-burgundy/20 rounded-xl overflow-hidden"
-                            side="top"
-                            align="start"
-                          >
-                            <div className="space-y-3">
-                              <h4 className="text-sm font-semibold text-tadegg-brown">
-                                {achievement.title}
-                              </h4>
-                              <p className="text-sm text-tadegg-brown/80">
-                                {achievement.detail}
-                              </p>
-                              <div className="flex items-center pt-2 text-xs text-tadegg-burgundy/80">
-                                <achievement.icon className="mr-2 h-4 w-4 opacity-70" />
-                                <span>Awarded in {achievement.year}</span>
-                              </div>
-                            </div>
-                          </HoverCardContent>
-                        </HoverCard>
-                      </CardFooter>
-                    </Card>
-                  </div>
-                </CarouselItem>
+                      )}
+                    </motion.button>
+                  </TooltipTrigger>
+                  <TooltipContent 
+                    side="right" 
+                    className="bg-white/90 backdrop-blur-sm border-tadegg-gold shadow-lg"
+                  >
+                    <p className="font-serif text-tadegg-burgundy">{achievements[idx].title}</p>
+                  </TooltipContent>
+                </Tooltip>
               ))}
-            </CarouselContent>
-
-            {/* Navigation buttons */}
-            <div className="hidden sm:block">
-              <CarouselPrevious className="left-0 bg-white/90 backdrop-blur-sm hover:bg-white transition-all duration-300 shadow-lg hover:shadow-xl -translate-x-1/2 border-none text-tadegg-burgundy hover:text-tadegg-burgundy/90 h-10 w-10" />
-              <CarouselNext className="right-0 bg-white/90 backdrop-blur-sm hover:bg-white transition-all duration-300 shadow-lg hover:shadow-xl translate-x-1/2 border-none text-tadegg-burgundy hover:text-tadegg-burgundy/90 h-10 w-10" />
+            </motion.div>
+          </TooltipProvider>
+          
+          {/* Auto-scroll progress bar with animation */}
+          <motion.div 
+            className="max-w-md mx-auto mb-8"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.7 }}
+          >
+            <Progress 
+              value={progress} 
+              className="h-1.5 bg-gray-200/80" 
+              indicatorClassName="bg-gradient-to-r from-tadegg-burgundy to-tadegg-gold transition-all duration-300"
+            />
+          </motion.div>
+          
+          {/* Main Carousel */}
+          <motion.div 
+            className="w-full max-w-5xl mx-auto"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.9 }}
+          >
+            <div className="overflow-hidden" ref={emblaRef}>
+              <div className="flex">
+                <AnimatePresence custom={direction} initial={false}>
+                  {achievements.map((achievement, index) => (
+                    <motion.div 
+                      key={achievement.id} 
+                      className="min-w-0 flex-[0_0_75%] md:flex-[0_0_80%] pl-4"
+                      custom={direction}
+                      variants={slideVariants}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                      transition={{ duration: TRANSITION_DURATION / 1000 }}
+                    >
+                      <div className="group relative p-1">
+                        <motion.div 
+                          className="overflow-hidden rounded-xl shadow-xl transition-all duration-500 group-hover:shadow-2xl group-hover:scale-[1.02] bg-white"
+                          whileHover={{ 
+                            scale: 1.01,
+                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                          }}
+                        >
+                          {/* Image with always visible overlay text */}
+                          <div className="relative overflow-hidden">
+                            <AspectRatio ratio={16/9} className="bg-muted">
+                              <img
+                                src={achievement.image}
+                                alt={achievement.title}
+                                className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
+                                loading="lazy"
+                              />
+                              
+                              {/* Enhanced Text Overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent flex flex-col justify-end p-6 md:p-8">
+                                <motion.div 
+                                  className="transform transition-transform duration-500 group-hover:translate-y-0"
+                                  initial={{ y: 20 }}
+                                  whileInView={{ y: 0 }}
+                                  viewport={{ once: true, margin: "-50px" }}
+                                  transition={{ duration: 0.6, delay: index * 0.1 + 1 }}
+                                >
+                                  <motion.span 
+                                    className="inline-block bg-tadegg-gold/90 text-white px-4 py-1 rounded-full text-sm font-serif mb-3 shadow-lg"
+                                    whileHover={{ scale: 1.05 }}
+                                  >
+                                    {achievement.year}
+                                  </motion.span>
+                                  <motion.h3 
+                                    className="text-xl md:text-2xl lg:text-3xl font-serif font-bold text-white mb-3 opacity-90 group-hover:opacity-100 drop-shadow-lg"
+                                    whileHover={{ x: 5 }}
+                                  >
+                                    {achievement.title}
+                                  </motion.h3>
+                                  <motion.p 
+                                    className="text-white/80 mb-4 max-w-lg text-sm md:text-base opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+                                    whileHover={{ x: 5 }}
+                                  >
+                                    {achievement.description}
+                                  </motion.p>
+                                  
+                                  {achievement.metric && (
+                                    <HoverCard openDelay={0} closeDelay={200}>
+                                      <HoverCardTrigger asChild>
+                                        <motion.div 
+                                          className="flex items-center mt-2 group/metric cursor-pointer w-fit relative z-20"
+                                          whileHover={{ x: 5 }}
+                                        >
+                                          <span className="text-tadegg-gold font-medium text-sm md:text-base">
+                                            {achievement.metric}
+                                          </span>
+                                          <ArrowRight className="h-4 w-4 text-tadegg-gold ml-2 transition-transform duration-300 group-hover/metric:translate-x-1" />
+                                        </motion.div>
+                                      </HoverCardTrigger>
+                                      <HoverCardContent className="w-80 bg-white/95 backdrop-blur-sm border-tadegg-gold shadow-xl relative z-30">
+                                        <div className="space-y-2">
+                                          <h4 className="text-sm font-semibold text-tadegg-burgundy">About this achievement</h4>
+                                          <p className="text-sm text-gray-700">
+                                            This recognition highlights our commitment to excellence in the coffee industry, 
+                                            setting new standards and preserving Ethiopian coffee heritage.
+                                          </p>
+                                        </div>
+                                      </HoverCardContent>
+                                    </HoverCard>
+                                  )}
+                                </motion.div>
+                              </div>
+                            </AspectRatio>
+                          </div>
+                        </motion.div>
+                        
+                        {/* Enhanced decorative elements with animation */}
+                        <motion.div 
+                          className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-tadegg-gold/30 backdrop-blur-sm"
+                          initial={{ rotate: 45, scale: 1 }}
+                          whileHover={{ rotate: 0, scale: 1.2 }}
+                          transition={{ duration: 0.5 }}
+                        />
+                        <motion.div 
+                          className="absolute -top-2 -left-2 w-8 h-8 rounded-full bg-tadegg-burgundy/20 backdrop-blur-sm"
+                          initial={{ rotate: 45, scale: 1 }}
+                          whileHover={{ rotate: 0, scale: 1.2 }}
+                          transition={{ duration: 0.5, delay: 0.1 }}
+                        />
+                        <motion.div 
+                          className="absolute top-1/2 left-0 w-2 h-20 bg-gradient-to-b from-tadegg-gold/0 via-tadegg-gold/20 to-tadegg-gold/0"
+                          initial={{ opacity: 0 }}
+                          whileHover={{ opacity: 1 }}
+                          transition={{ duration: 0.3 }}
+                        />
+                        <motion.div 
+                          className="absolute top-1/2 right-0 w-2 h-20 bg-gradient-to-b from-tadegg-burgundy/0 via-tadegg-burgundy/20 to-tadegg-burgundy/0"
+                          initial={{ opacity: 0 }}
+                          whileHover={{ opacity: 1 }}
+                          transition={{ duration: 0.3, delay: 0.1 }}
+                        />
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
             </div>
-
-            {/* Autoplay indicator */}
-            <div
-              className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium shadow-md transition-opacity duration-300 z-30 flex items-center gap-2"
-              style={{ opacity: isPaused ? 1 : 0 }}
+            
+            {/* Navigation controls */}
+            <motion.div 
+              className="mt-8 flex items-center justify-center gap-4"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 1.2 }}
             >
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-tadegg-burgundy opacity-75 animate-ping" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-tadegg-burgundy" />
-              </span>
-              <span>Paused</span>
-            </div>
-          </Carousel>
-        </div>
-
-        {/* Slide indicators */}
-        <div
-          className={cn(
-            "flex justify-center mt-12 transition-all duration-700 delay-500",
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-          )}
-        >
-          <div className="flex gap-2.5">
-            {achievements.map((_, index) => (
-              <button
-                key={index}
-                aria-label={`Go to slide ${index + 1}`}
-                className={cn(
-                  "relative w-3 h-3 rounded-full transition-all duration-300",
-                  activeIndex === index
-                    ? "bg-tadegg-burgundy scale-125"
-                    : "bg-tadegg-brown/30 hover:bg-tadegg-burgundy/50",
-                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-tadegg-burgundy/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                )}
-                onClick={() => handleIndicatorClick(index)}
+              <motion.button 
+                onClick={scrollPrev}
+                className="h-12 w-12 rounded-full bg-white shadow-md border border-tadegg-gold text-tadegg-burgundy flex items-center justify-center hover:bg-tadegg-cream transition-all duration-300"
+                whileHover={{ scale: 1.1, backgroundColor: '#f8f4e6' }}
+                whileTap={{ scale: 0.95 }}
+                aria-label="Previous achievement"
               >
-                {activeIndex === index && (
-                  <>
-                    <span className="absolute inset-0 rounded-full bg-tadegg-burgundy/40 animate-ping duration-1000" />
-                    <span className="absolute -inset-2 rounded-full border border-tadegg-burgundy/30 animate-pulse duration-2000" />
-                  </>
-                )}
-              </button>
-            ))}
-          </div>
+                <ArrowLeft className="h-6 w-6" />
+              </motion.button>
+              
+              {/* Achievement Indicator */}
+              <motion.div 
+                className="inline-flex items-center px-6 py-3 bg-white/80 backdrop-blur-lg rounded-full border border-tadegg-gold/20 shadow-lg"
+                whileHover={{ scale: 1.05 }}
+              >
+                <span className="text-tadegg-burgundy font-serif">Achievement</span>
+                <motion.span 
+                  className="mx-2 text-tadegg-gold font-serif text-2xl font-bold"
+                  key={activeIndex}
+                  initial={{ scale: 0.8, opacity: 0.5 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {activeIndex + 1}
+                </motion.span>
+                <span className="text-gray-500 font-serif">of {achievements.length}</span>
+              </motion.div>
+              
+              <motion.button 
+                onClick={scrollNext}
+                className="h-12 w-12 rounded-full bg-white shadow-md border border-tadegg-gold text-tadegg-burgundy flex items-center justify-center hover:bg-tadegg-cream transition-all duration-300"
+                whileHover={{ scale: 1.1, backgroundColor: '#f8f4e6' }}
+                whileTap={{ scale: 0.95 }}
+                aria-label="Next achievement"
+              >
+                <ArrowRight className="h-6 w-6" />
+              </motion.button>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
-
-      {/* Detail modal */}
-      {selectedAchievement && (
-        <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"
-          onClick={closeDetailModal}
-        >
-          <div
-            className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-auto animate-scale-in overflow-hidden max-h-[90vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="relative h-48 md:h-56 w-full overflow-hidden">
-              // For better performance, consider using optimized images:
-              <img
-                src={selectedAchievement.image}
-                srcSet={`${selectedAchievement.image}?w=400 400w, ${selectedAchievement.image}?w=800 800w`}
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
-                alt={selectedAchievement.title}
-                className="object-cover"
-                loading="lazy"
-                decoding="async"
-              />
-              {/* <Image
-                src={selectedAchievement.image}
-                alt={selectedAchievement.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
-              /> */}
-              <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/70" />
-              <div className="absolute bottom-4 left-4 z-20">
-                <div
-                  className={cn(
-                    "w-14 h-14 rounded-full flex items-center justify-center text-white shadow-xl",
-                    selectedAchievement.color
-                  )}
-                >
-                  <selectedAchievement.icon size={28} />
-                </div>
-              </div>
-              <div className="absolute bottom-4 right-4 z-20">
-                <p className="text-white text-sm font-medium bg-tadegg-burgundy px-4 py-2 rounded-full shadow-lg">
-                  {selectedAchievement.year}
-                </p>
-              </div>
-            </div>
-
-            <div className="p-6 md:p-8 flex-1 overflow-y-auto">
-              <h3 className="text-2xl md:text-3xl font-serif font-bold text-tadegg-burgundy mb-4">
-                {selectedAchievement.title}
-              </h3>
-              <div className="space-y-4 text-tadegg-brown/90">
-                <p className="text-lg leading-relaxed">
-                  {selectedAchievement.description}
-                </p>
-                <p className="text-base leading-relaxed">
-                  {selectedAchievement.detail}
-                </p>
-              </div>
-            </div>
-
-            <div className="p-6 pt-0 flex justify-end border-t border-gray-100">
-              <button
-                className="px-5 py-2.5 rounded-lg bg-tadegg-green text-white hover:bg-tadegg-burgundy transition-colors duration-300 flex items-center gap-2"
-                onClick={closeDetailModal}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </section>
+    </motion.section>
   );
 };
 
