@@ -15,8 +15,9 @@ const Admin = mongoose.model("Admin", adminSchema);
 (async () => {
   const hashedPassword = await bcryptjs.hashSync("admin123", 10); 
   await Admin.create({
-    email: "admin@tadegg.com",
+    email: "samuelephrem07@gmail.com",
     password: hashedPassword,
+    role: "owner",
   });
   console.log("Admin created");
   mongoose.connection.close();
