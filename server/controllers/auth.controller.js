@@ -5,89 +5,165 @@ import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js
 import {
 	sendPasswordResetEmail,
 	sendResetSuccessEmail,
-	sendVerificationEmail,
 	sendWelcomeEmail,
 } from "../mailtrap/emails.js";
 import { User } from "../models/user.model.js";
+import transporter from "../config/nodemailer.js";
+import { VERIFICATION_EMAIL_TEMPLATE, WELCOME_EMAIL_TEMPLATE } from "../mailtrap/emailTemplates.js";
 
-export const signup = async (req, res) => {
-	const { email, password, name } = req.body;
+// ... (keep all your existing functions)
 
+export const getAllUsers = async (req, res) => {
 	try {
-		if (!email || !password || !name) {
-			throw new Error("All fields are required");
-		}
-
-		const userAlreadyExists = await User.findOne({ email });
-		console.log("userAlreadyExists", userAlreadyExists);
-
-		if (userAlreadyExists) {
-			return res.status(400).json({ success: false, message: "User already exists" });
-		}
-
-		const hashedPassword = await bcryptjs.hash(password, 10);
-		const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
-
-		const user = new User({
-			email,
-			password: hashedPassword,
-			name,
-			verificationToken,
-			verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-		});
-
-		await user.save();
-
-		// jwt
-		generateTokenAndSetCookie(res, user._id);
-
-		await sendVerificationEmail(user.email, verificationToken);
-
-		res.status(201).json({
-			success: true,
-			message: "User created successfully",
-			user: {
-				...user._doc,
-				password: undefined,
-			},
-		});
+		
+		const users = await User.find()
+			.select("-password -resetPasswordToken -resetPasswordExpiresAt -verificationToken -verificationTokenExpiresAt")
+			.sort({ createdAt: -1 });
+		res.status(200).json({ success: true, users });
 	} catch (error) {
+		console.log("Error in getAllUsers ", error);
 		res.status(400).json({ success: false, message: error.message });
 	}
 };
+// @desc    Get all admin users
+// @route   GET /api/users/admins
+// @access  Private/Admin
+export const getAdminUsers = async (req, res) => {
+  try {
+    // Only owners and admins can see this list
+    if (req.user.role !== 'owner' && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: "Not authorized" });
+    }
+
+    const users = await User.find({ role: { $in: ['owner', 'admin'] } })
+      .select("-password -resetPasswordToken -resetPasswordExpiresAt -verificationToken -verificationTokenExpiresAt");
+
+    res.status(200).json({ success: true, users });
+  } catch (error) {
+    console.log("Error in getAdminUsers ", error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Invite a new admin
+// @route   POST /api/users/invite-admin
+// @access  Private/Owner
+export const inviteAdmin = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    // Only owners can invite admins
+    if (req.user.role !== 'owner') {
+      return res.status(403).json({ success: false, message: "Only owners can invite admins" });
+    }
+
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ success: false, message: "Please provide a valid email" });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: "User already exists" });
+    }
+
+    // Create verification token (6-digit code)
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+    const verificationLink = `${process.env.CLIENT_URL}/login`;
+
+    // Hash the default password
+    const hashedPassword = await bcryptjs.hash("tadegg123", 10); // saltRounds = 10
+
+    // Create unverified admin user
+    const user = new User({
+      email,
+      name: "Admin",
+      password: hashedPassword,
+      role: 'admin',
+      verificationToken,
+      verificationTokenExpiresAt,
+      invitedBy: req.user._id
+    });
+
+    await user.save();
+    generateTokenAndSetCookie(res, user._id);
+
+    const htmlContent = VERIFICATION_EMAIL_TEMPLATE
+      .replace("{verificationCode}", verificationToken)
+      .replace("{verificationLink}", verificationLink)
+      .replace("{year}", new Date().getFullYear());
+
+    // Send verification email
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL,
+      to: email,
+      subject: "Admin Invitation",
+      text: `You have been invited to join as an admin. Your verification code is ${verificationToken}. Please verify your email within 24 hours.`,
+      html: htmlContent,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(201).json({
+      success: true,
+      message: "Admin invitation sent",
+      user: {
+        _id: user._id,
+        email: user.email,
+        role: user.role,
+        isVerified: user.isVerified
+      }
+    });
+  } catch (error) {
+    console.log("Error in inviteAdmin ", error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
 
 export const verifyEmail = async (req, res) => {
-	const { code } = req.body;
-	try {
-		const user = await User.findOne({
-			verificationToken: code,
-			verificationTokenExpiresAt: { $gt: Date.now() },
-		});
+  const { code } = req.body;
+  try {
+    const user = await User.findOne({
+      verificationToken: code,
+      verificationTokenExpiresAt: { $gt: Date.now() },
+    });
 
-		if (!user) {
-			return res.status(400).json({ success: false, message: "Invalid or expired verification code" });
-		}
+    if (!user) {
+      return res.status(400).json({ success: false, message: "Invalid or expired verification code" });
+    }
 
-		user.isVerified = true;
-		user.verificationToken = undefined;
-		user.verificationTokenExpiresAt = undefined;
-		await user.save();
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpiresAt = undefined;
+    await user.save();
 
-		await sendWelcomeEmail(user.email, user.name);
+    const htmlContent = WELCOME_EMAIL_TEMPLATE
+      .replace("{name}", user.name || "Admin")
+      .replace("{dashboardLink}", "https://app.tedegg.com/admin/")
+      .replace("{year}", new Date().getFullYear());
 
-		res.status(200).json({
-			success: true,
-			message: "Email verified successfully",
-			user: {
-				...user._doc,
-				password: undefined,
-			},
-		});
-	} catch (error) {
-		console.log("error in verifyEmail ", error);
-		res.status(500).json({ success: false, message: "Server error" });
-	}
+    await transporter.sendMail({
+      from: process.env.SENDER_EMAIL,
+      to: user.email,
+      subject: "Welcome to Tede GG – Admin Access Granted",
+      html: htmlContent,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully",
+      user: {
+        ...user._doc,
+        password: undefined,
+      },
+    });
+  } catch (error) {
+    console.error("error in verifyEmail", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };
+
 export const google = async (req, res, next) => {
   const { email } = req.body;
 
@@ -120,35 +196,39 @@ export const google = async (req, res, next) => {
 
 
 export const login = async (req, res, next) => {
-	const { email, password } = req.body;
-	try {
-		const user = await User.findOne({ email });
-		if (!user) {
-			return res.status(400).json({ success: false, message: "Invalid credentials" });
-		}
-		const isPasswordValid = await bcryptjs.compare(password, user.password);
-		if (!isPasswordValid) {
-			return res.status(400).json({ success: false, message: "Invalid credentials" });
-		}
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
 
-		generateTokenAndSetCookie(res, user._id);
+    if (!user) {
+      return res.status(400).json({ success: false, message: "Invalid credentials" });
+    }
 
-		user.lastLogin = new Date();
-		await user.save();
+    const isPasswordValid = await bcryptjs.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ success: false, message: "Invalid credentials" });
+    }
 
-		res.status(200).json({
-			success: true,
-			message: "Logged in successfully",
-			user: {
-				...user._doc,
-				password: undefined,
-			},
-		});
-	} catch (error) {
-		console.log("Error in login ", error);
-		res.status(400).json({ success: false, message: error.message });
-	}
+    // Don't log in unverified users yet — just let the frontend handle redirection
+    generateTokenAndSetCookie(res, user._id);
+
+    user.lastLogin = new Date();
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Logged in successfully",
+      user: {
+        ...user._doc,
+        password: undefined,
+      },
+    });
+  } catch (error) {
+    console.log("Error in login ", error);
+    res.status(400).json({ success: false, message: error.message });
+  }
 };
+
 
 export const logout = async (req, res) => {
 	res.clearCookie("token");
@@ -216,7 +296,7 @@ export const resetPassword = async (req, res) => {
 
 export const checkAuth = async (req, res) => {
 	try {
-		const user = await User.findById(req.userId).select("-password");
+		const user = await User.findById(req.user).select("-password");
 		if (!user) {
 			return res.status(400).json({ success: false, message: "User not found" });
 		}

@@ -84,3 +84,24 @@ export const sendResetSuccessEmail = async (email) => {
 		throw new Error(`Error sending password reset success email: ${error}`);
 	}
 };
+
+
+// Add this to your existing emails.js
+export const sendAdminInviteEmail = async (email, inviterName, verificationCode) => {
+  const subject = `You've been invited to be an admin`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #3D550C;">Admin Invitation</h2>
+      <p>Hello,</p>
+      <p>${inviterName} has invited you to become an admin.</p>
+      <p>Your verification code is: <strong>${verificationCode}</strong></p>
+      <p>Please use this code to complete your admin account setup.</p>
+      <p>This code will expire in 24 hours.</p>
+      <br/>
+      <p>Best regards,</p>
+      <p>The Admin Team</p>
+    </div>
+  `;
+
+  await sendEmail({ email, subject, html });
+};
