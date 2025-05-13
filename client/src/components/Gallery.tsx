@@ -2,45 +2,10 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { gallery } from "./data";
 
-const galleryImages = [
-  {
-    id: 1,
-    src: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
-    alt: "Coffee beans drying in the sun",
-    category: "processing"
-  },
-  {
-    id: 2,
-    src: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9",
-    alt: "Coffee plantation in the Ethiopian highlands",
-    category: "farming"
-  },
-  {
-    id: 3,
-    src: "https://images.unsplash.com/photo-1523712999610-f77fbcfc3843",
-    alt: "Morning sun through coffee trees",
-    category: "farming"
-  },
-  {
-    id: 4,
-    src: "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07",
-    alt: "Coffee cherries ripening on the branch",
-    category: "farming"
-  },
-  {
-    id: 5,
-    src: "https://images.unsplash.com/photo-1472396961693-142e6e269027",
-    alt: "Ethiopian landscape with coffee farms",
-    category: "landscape"
-  },
-  {
-    id: 6,
-    src: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
-    alt: "Traditional coffee ceremony",
-    category: "culture"
-  }
-];
+
+
 
 const categories = [
   { id: "all", name: "All" },
@@ -55,8 +20,8 @@ const Gallery = () => {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
 
   const filteredImages = activeCategory === "all" 
-    ? galleryImages
-    : galleryImages.filter(img => img.category === activeCategory);
+    ? gallery
+    : gallery.filter(img => img.category === activeCategory);
 
   return (
     <section id="gallery" className="section-padding bg-tadegg-cream/30">

@@ -13,6 +13,7 @@ import Preloader from "./components/Preloader";
 import AdminLogin from "./pages/AdminLogin";
 import BlogPost from "./pages/BlogPost";
 import { useAuthStore } from "./store/authStore";
+import VerifyEmail from "./pages/verify-email";
 
 const queryClient = new QueryClient();
 
@@ -40,9 +41,9 @@ const App = () => {
       return <Navigate to="/login" replace />;
     }
 
-    // if (!user.isVerified) {
-    // 	return <Navigate to='/verify-email' replace />;
-    // }
+    if (!user.isVerified) {
+    	return <Navigate to='/verify-email' replace />;
+    }
 
     return children;
   };
@@ -71,6 +72,7 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route
               path="/admin"
               element={

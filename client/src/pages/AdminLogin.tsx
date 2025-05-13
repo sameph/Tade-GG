@@ -24,13 +24,19 @@ const AdminLogin = () => {
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      await login(email, password);
+      const user = await login(email, password);
+  
       toast({
         title: "Login Successful",
         description: "Welcome to Tadegg Admin Dashboard",
         variant: "default",
       });
-      navigate('/admin'); 
+  
+      if (!user.isVerified) {
+        navigate('/verify-email'); 
+      } else {
+        navigate('/admin'); 
+      }
     } catch (err) {
       toast({
         title: "Login Failed",
@@ -39,6 +45,8 @@ const AdminLogin = () => {
       });
     }
   };
+  
+  
 
   const handleGoogleLogin = async () => {
     try {

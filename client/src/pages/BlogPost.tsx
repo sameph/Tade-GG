@@ -21,7 +21,7 @@ interface BlogPost {
   title: string;
   excerpt: string;
   content: string;
-  status: 'draft' | 'published';
+  status: "draft" | "published";
   author: string;
   category: string;
   tags: string[];
@@ -74,7 +74,7 @@ const BlogPost = () => {
       try {
         setIsLoading(true);
         const response = await fetch(`/api/blogs/${slug}`);
-        
+
         if (!response.ok) {
           if (response.status === 404) {
             setError("Post not found");
@@ -300,19 +300,19 @@ const BlogPost = () => {
                   </div>
                 </ScrollReveal>
 
-      <ScrollReveal direction="bottom" delay={400} duration={700}>
-        <div className="custom-quill-content max-w-none">
-          <p className="text-xl font-serif text-tadegg-brown/90 mb-6 leading-relaxed">
-            {post.excerpt}
-          </p>
-          <div 
-            className="react-quill-content"
-            dangerouslySetInnerHTML={{ __html: post.content }} 
-          />
-        </div>
-      </ScrollReveal>
+                <ScrollReveal direction="bottom" delay={400} duration={700}>
+                  <div className="custom-quill-content max-w-none">
+                    <p className="text-xl font-serif text-tadegg-brown/90 mb-6 leading-relaxed">
+                      {post.excerpt}
+                    </p>
+                    <div
+                      className="react-quill-content"
+                      dangerouslySetInnerHTML={{ __html: post.content }}
+                    />
+                  </div>
+                </ScrollReveal>
 
-      <ScrollReveal direction="bottom" delay={500} duration={700}>
+                <ScrollReveal direction="bottom" delay={500} duration={700}>
                   <div className="mt-12 pt-8 border-t border-tadegg-cream">
                     <h3 className="font-serif font-semibold text-lg text-tadegg-green mb-4">
                       Related Topics
@@ -564,7 +564,6 @@ const BlogPost = () => {
           }
         `}
       </style>
-
 
       <style>
         {`

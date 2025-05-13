@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import {
   HoverCard,
@@ -21,38 +21,51 @@ const AUTO_SCROLL_INTERVAL = 5000;
 
 const AchievementsSection = () => {
   const [activeIndex, setActiveIndex] = useState<number>(0);
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: "center" });
   const [progress, setProgress] = useState<number>(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [isPaused, setIsPaused] = useState(false);
 
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: "center" });
+
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isPausedRef = useRef(isPaused);
+
   useEffect(() => {
-    if (!emblaApi || isPaused) return;
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
 
-    const handleAutoScroll = () => {
-      emblaApi.scrollNext();
-    };
+  const animateProgress = useCallback(() => {
+    const startTime = Date.now();
 
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(handleAutoScroll, AUTO_SCROLL_INTERVAL);
+    const step = () => {
+      if (isPausedRef.current) return;
 
-    let startTime = Date.now();
-    const updateProgress = () => {
       const elapsed = Date.now() - startTime;
       const newProgress = Math.min(100, (elapsed / AUTO_SCROLL_INTERVAL) * 100);
       setProgress(newProgress);
 
-      if (!isPaused && elapsed < AUTO_SCROLL_INTERVAL) {
-        requestAnimationFrame(updateProgress);
+      if (elapsed < AUTO_SCROLL_INTERVAL) {
+        requestAnimationFrame(step);
       }
     };
 
-    requestAnimationFrame(updateProgress);
+    requestAnimationFrame(step);
+  }, []);
+
+  useEffect(() => {
+    if (!emblaApi || isPaused) return;
+
+    if (intervalRef.current) clearInterval(intervalRef.current);
+
+    intervalRef.current = setInterval(() => {
+      emblaApi.scrollNext();
+    }, AUTO_SCROLL_INTERVAL);
+
+    animateProgress();
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [emblaApi, activeIndex, isPaused]);
+  }, [emblaApi, activeIndex, isPaused, animateProgress]);
 
   useEffect(() => {
     if (!emblaApi) return;
@@ -66,9 +79,9 @@ const AchievementsSection = () => {
     return () => emblaApi.off('select', onSelect);
   }, [emblaApi]);
 
-  const handleSlideClick = (index: number) => {
+  const handleSlideClick = useCallback((index: number) => {
     emblaApi?.scrollTo(index);
-  };
+  }, [emblaApi]);
 
   const handleMouseEnter = () => setIsPaused(true);
   const handleMouseLeave = () => {
@@ -85,7 +98,7 @@ const AchievementsSection = () => {
       <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white to-transparent opacity-50"></div>
       <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-white to-transparent opacity-50"></div>
 
-      {/* Background circles with responsive sizing */}
+      {/* Background circles */}
       <div className="absolute left-[-20vw] top-[30%] w-[60vw] h-[60vw] rounded-full bg-tadegg-gold/10 animate-pulse hidden sm:block"></div>
       <div className="absolute right-[-15vw] bottom-[25%] w-[50vw] h-[50vw] rounded-full bg-tadegg-burgundy/10 animate-pulse hidden sm:block"></div>
       <div className="absolute left-[25%] bottom-0 w-[30vw] h-[30vw] rounded-full bg-tadegg-green/10 animate-pulse hidden sm:block"></div>
@@ -97,7 +110,9 @@ const AchievementsSection = () => {
             <h4 className="text-tadegg-green font-serif italic tracking-wider">Recognition & Excellence</h4>
             <div className="h-[1px] w-12 bg-tadegg-gold"></div>
           </div>
-          <h2 className="section-title bg-clip-text text-transparent bg-gradient-to-r from-tadegg-burgundy to-tadegg-gold">Our Achievements</h2>
+          <h2 className="section-title bg-clip-text text-transparent bg-gradient-to-r from-tadegg-burgundy to-tadegg-gold">
+            Our Achievements
+          </h2>
           <p className="section-subtitle max-w-xl mx-auto text-gray-600">
             Celebrating our journey of excellence and recognition in the world of Ethiopian coffee.
           </p>
@@ -106,22 +121,27 @@ const AchievementsSection = () => {
         <div className="relative">
           <TooltipProvider>
             <div className="hidden lg:flex absolute -left-4 top-1/2 transform -translate-y-1/2 flex-col items-center space-y-6 z-10">
-              {achievements.map((_, idx) => (
-                <Tooltip key={idx}>
+              {achievements.map((achievement, idx) => (
+                <Tooltip key={achievement.id}>
                   <TooltipTrigger asChild>
                     <button
                       aria-label={`View achievement ${idx + 1}`}
                       onClick={() => handleSlideClick(idx)}
                       className={cn(
                         "w-4 h-4 rounded-full transition-all duration-300",
-                        activeIndex === idx 
-                          ? "bg-tadegg-burgundy scale-125 shadow-lg shadow-tadegg-burgundy/30" 
+                        activeIndex === idx
+                          ? "bg-tadegg-burgundy scale-125 shadow-lg shadow-tadegg-burgundy/30"
                           : "bg-gray-300 hover:bg-tadegg-gold"
                       )}
                     />
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="bg-white/90 backdrop-blur-md border border-tadegg-gold">
-                    <p className="font-serif text-sm text-tadegg-burgundy font-medium">{achievements[idx].title}</p>
+                  <TooltipContent
+                    side="right"
+                    className="bg-white/90 backdrop-blur-md border border-tadegg-gold"
+                  >
+                    <p className="font-serif text-sm text-tadegg-burgundy font-medium">
+                      {achievement.title}
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               ))}
@@ -129,8 +149,11 @@ const AchievementsSection = () => {
           </TooltipProvider>
 
           <div className="max-w-md mx-auto mb-8">
-            <Progress value={progress} className="h-1 bg-gray-200" 
-              indicatorClassName="bg-gradient-to-r from-tadegg-burgundy to-tadegg-gold" />
+            <Progress 
+              value={progress} 
+              className="h-1 bg-gray-200"
+              indicatorClassName="bg-gradient-to-r from-tadegg-burgundy to-tadegg-gold"
+            />
           </div>
 
           <div 
@@ -140,18 +163,18 @@ const AchievementsSection = () => {
           >
             <div className="overflow-hidden" ref={emblaRef}>
               <div className="flex">
-                {achievements.map((achievement, index) => (
+                {achievements.map((achievement) => (
                   <div key={achievement.id} className="min-w-0 flex-[0_0_75%] md:flex-[0_0_80%] pl-4">
                     <div className="group relative p-1">
                       <div className="overflow-hidden rounded-xl shadow-xl transition-all duration-500 group-hover:shadow-2xl group-hover:scale-[1.02] bg-white">
                         <div className="relative overflow-hidden">
-                          <AspectRatio ratio={16/9} className="bg-muted">
+                          <AspectRatio ratio={16 / 9} className="bg-muted">
                             <img
                               src={achievement.image}
                               alt={achievement.title}
                               className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent flex flex-col justify-end p-6 md:p-8 transition-all duration-500 group-hover:opacity-100">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent flex flex-col justify-end p-6 md:p-8">
                               <div className="transform transition-transform duration-500 group-hover:translate-y-0">
                                 <span className="inline-block bg-tadegg-gold/90 text-white px-4 py-1 rounded-full text-sm font-serif mb-3 shadow-lg">
                                   {achievement.year}
@@ -166,7 +189,9 @@ const AchievementsSection = () => {
                                   <HoverCard openDelay={0} closeDelay={200}>
                                     <HoverCardTrigger asChild>
                                       <div className="flex items-center mt-2 group/metric cursor-pointer w-fit">
-                                        <span className="text-tadegg-gold font-medium text-sm md:text-base">{achievement.metric}</span>
+                                        <span className="text-tadegg-gold font-medium text-sm md:text-base">
+                                          {achievement.metric}
+                                        </span>
                                         <ArrowRight className="h-4 w-4 text-tadegg-gold ml-2 transition-transform duration-300 group-hover/metric:translate-x-1" />
                                       </div>
                                     </HoverCardTrigger>
@@ -191,23 +216,25 @@ const AchievementsSection = () => {
 
             <div className="mt-8 flex items-center justify-center gap-4">
               <button 
-                onClick={() => emblaApi?.scrollPrev()} 
+                onClick={() => emblaApi?.scrollPrev()}
+                aria-label="Previous Achievement"
                 className="h-10 w-10 rounded-full bg-white shadow-md border border-tadegg-gold text-tadegg-burgundy flex items-center justify-center hover:bg-tadegg-cream transition-all duration-300 hover:scale-110"
               >
                 <ArrowLeft className="h-5 w-5" />
-                <span className="sr-only">Previous slide</span>
               </button>
+
               <div className="inline-flex items-center px-6 py-2.5 bg-white/80 backdrop-blur-lg rounded-full border border-tadegg-gold/20 shadow-lg">
                 <span className="text-tadegg-burgundy font-serif">Achievement</span>
                 <span className="mx-2 text-tadegg-gold font-serif text-xl font-bold">{activeIndex + 1}</span>
                 <span className="text-gray-500 font-serif">of {achievements.length}</span>
               </div>
+
               <button 
-                onClick={() => emblaApi?.scrollNext()} 
+                onClick={() => emblaApi?.scrollNext()}
+                aria-label="Next Achievement"
                 className="h-10 w-10 rounded-full bg-white shadow-md border border-tadegg-gold text-tadegg-burgundy flex items-center justify-center hover:bg-tadegg-cream transition-all duration-300 hover:scale-110"
               >
                 <ArrowRight className="h-5 w-5" />
-                <span className="sr-only">Next slide</span>
               </button>
             </div>
           </div>
