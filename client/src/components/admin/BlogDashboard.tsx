@@ -59,7 +59,7 @@ const BlogDashboard = ({ onLogout }: BlogDashboardProps) => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/blogs");
+        const response = await fetch("/api/blogs");
         if (!response.ok) throw new Error("Failed to fetch blog posts");
         const data = await response.json();
         if (data.success && data.posts) {
@@ -114,8 +114,8 @@ const BlogDashboard = ({ onLogout }: BlogDashboardProps) => {
     try {
       const method = activePost ? "PUT" : "POST";
       const url = activePost
-        ? `http://localhost:5000/api/blogs/${editedPost.slug}`
-        : "http://localhost:5000/api/blogs/create";
+        ? `/api/blogs/${editedPost.slug}`
+        : "/api/blogs/create";
 
       const response = await fetch(url, {
         method,
@@ -150,7 +150,7 @@ const BlogDashboard = ({ onLogout }: BlogDashboardProps) => {
       if (!editedPost._id) await handleSavePost();
 
       const response = await fetch(
-        `http://localhost:5000/api/blogs/${editedPost._id}/publish`,
+        `/api/blogs/${editedPost._id}/publish`,
         { method: "PUT", headers: { "Content-Type": "application/json" } }
       );
 
@@ -178,7 +178,7 @@ const BlogDashboard = ({ onLogout }: BlogDashboardProps) => {
   const confirmDelete = async () => {
     try {
       if (!activePost) return;
-      const response = await fetch(`http://localhost:5000/api/blogs/${activePost}`, {
+      const response = await fetch(`/api/blogs/${activePost}`, {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Failed to delete post");
