@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { BlogPost } from "@/types/blog";
 import BlogPostCard from "./BlogPostCard";
@@ -37,7 +37,6 @@ const BlogDashboard = ({ onLogout }: BlogDashboardProps) => {
   const [error, setError] = useState<string | null>(null);
   const [activePost, setActivePost] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editedPost, setEditedPost] = useState<BlogPost>({
     _id: "",
     title: "",
@@ -55,34 +54,38 @@ const BlogDashboard = ({ onLogout }: BlogDashboardProps) => {
   const [activeTab, setActiveTab] = useState<string>("posts");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Fetch posts
+  const fetchPosts = useCallback(async () => {
+    try {
+      const response = await fetch("/api/blogs");
+      if (!response.ok) throw new Error("Failed to fetch blog posts");
+      const data = await response.json();
+      if (data.success && data.posts) {
+        setPosts(data.posts);
+      } else {
+        throw new Error(data.message || "Failed to fetch posts");
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
+      toast({
+        title: "Error",
+        description: "Failed to load blog posts",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await fetch("/api/blogs");
-        if (!response.ok) throw new Error("Failed to fetch blog posts");
-        const data = await response.json();
-        if (data.success && data.posts) {
-          setPosts(data.posts);
-        } else {
-          throw new Error(data.message || "Failed to fetch posts");
-        }
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "An unknown error occurred"
-        );
-        toast({
-          title: "Error",
-          description: "Failed to load blog posts",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPosts();
-  }, [toast]);
+  }, [fetchPosts]);
 
   const handleEditPost = (post: BlogPost) => {
     setEditedPost({ ...post, mainImage: post.mainImage || { url: "" } });
@@ -111,102 +114,142 @@ const BlogDashboard = ({ onLogout }: BlogDashboardProps) => {
   };
 
   const handleSavePost = async () => {
-    try {
-      const method = activePost ? "PUT" : "POST";
-      const url = activePost
-        ? `/api/blogs/${editedPost.slug}`
-        : "/api/blogs/create";
+  try {
+    const method = activePost ? "PUT" : "POST";
+    const url = activePost
+      ? `/api/blogs/${editedPost.slug}`
+      : "/api/blogs/create";
 
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editedPost),
-      });
+    const response = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...editedPost, status: "draft" }), // Save as draft
+    });
 
-      if (!response.ok) throw new Error("Failed to save post");
-      const data = await response.json();
+    if (!response.ok) throw new Error("Failed to save post");
+    const data = await response.json();
 
-      if (activePost) {
-        setPosts(posts.map((post) => (post._id === activePost ? data.post : post)));
-        toast({ title: "Post Updated", description: `"${data.post.title}" has been updated.` });
-      } else {
-        setPosts([data.post, ...posts]);
-        toast({ title: "Post Created", description: `"${data.post.title}" has been created.` });
-      }
+    setPosts((prevPosts) =>
+      activePost
+        ? prevPosts.map((post) =>
+            post._id === activePost ? data.post : post
+          )
+        : [data.post, ...prevPosts]
+    );
+    toast({
+      title: activePost ? "Post Updated" : "Post Created",
+      description: `"${data.post.title}" has been ${
+        activePost ? "updated" : "created"
+      }.`,
+    });
 
-      setIsEditing(false);
-      setActivePost(null);
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Failed to save post",
-        variant: "destructive",
-      });
-    }
-  };
+    setIsEditing(false);
+    setActivePost(null);
+  } catch (err) {
+    toast({
+      title: "Error",
+      description: err instanceof Error ? err.message : "Failed to save post",
+      variant: "destructive",
+    });
+  }
+};
 
-  const handlePublishPost = async () => {
-    try {
-      if (!editedPost._id) await handleSavePost();
+const handlePublishPost = async () => {
+  try {
+    if (!editedPost._id) await handleSavePost(); // Save first if it's new
 
-      const response = await fetch(
-        `/api/blogs/${editedPost._id}/publish`,
-        { method: "PUT", headers: { "Content-Type": "application/json" } }
-      );
+    const response = await fetch(`/api/blogs/${editedPost._id}/publish`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+    });
 
-      if (!response.ok) throw new Error("Failed to publish post");
-      const data = await response.json();
-      setPosts(posts.map((post) => (post._id === editedPost._id ? data.post : post)));
+    if (!response.ok) throw new Error("Failed to publish post");
+    const data = await response.json();
 
-      toast({ title: "Post Published", description: `"${data.post.title}" is now live!` });
-      setIsEditing(false);
-      setActivePost(null);
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Failed to publish post",
-        variant: "destructive",
-      });
-    }
-  };
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post._id === editedPost._id ? data.post : post
+      )
+    );
+
+    toast({
+      title: "Post Published",
+      description: `"${data.post.title}" is now live!`,
+    });
+
+    setIsEditing(false);
+    setActivePost(null);
+  } catch (err) {
+    toast({
+      title: "Error",
+      description:
+        err instanceof Error ? err.message : "Failed to publish post",
+      variant: "destructive",
+    });
+  }
+};
+
 
   const handleDeletePost = (id: string) => {
     setIsDialogOpen(true);
-    setActivePost(id);
+    setSelectedPostId(id);
   };
 
   const confirmDelete = async () => {
+    if (!selectedPostId) return;
+
+    setIsDeleting(true);
+
     try {
-      if (!activePost) return;
-      const response = await fetch(`/api/blogs/${activePost}`, {
+      const post = posts.find((p) => p._id === selectedPostId);
+      if (!post) throw new Error("Post not found");
+
+      const res = await fetch(`/api/blogs/${post._id}`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
       });
-      if (!response.ok) throw new Error("Failed to delete post");
-      setPosts(posts.filter((post) => post._id !== activePost));
-      setIsDialogOpen(false);
-      setActivePost(null);
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Failed to delete the post");
+      }
+
+      setPosts((prev) => prev.filter((p) => p._id !== selectedPostId));
+
       toast({
         title: "Post Deleted",
-        description: "The blog post has been permanently removed.",
-        variant: "destructive",
+        description: `"${post.title}" has been removed.`,
       });
     } catch (err) {
       toast({
         title: "Error",
-        description: err instanceof Error ? err.message : "Failed to delete post",
+        description:
+          err instanceof Error ? err.message : "Failed to delete the post",
         variant: "destructive",
       });
+    } finally {
+      setIsDialogOpen(false);
+      setSelectedPostId(null);
+      setIsDeleting(false);
     }
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     if (name === "tags") {
-      setEditedPost({ ...editedPost, [name]: value.split(",").map((tag) => tag.trim()) });
+      setEditedPost({
+        ...editedPost,
+        [name]: value.split(",").map((tag) => tag.trim()),
+      });
     } else if (name === "mainImage.url") {
-      setEditedPost({ ...editedPost, mainImage: { ...editedPost.mainImage, url: value } });
+      setEditedPost({
+        ...editedPost,
+        mainImage: { ...editedPost.mainImage, url: value },
+      });
     } else {
       setEditedPost({ ...editedPost, [name]: value });
     }
@@ -214,7 +257,9 @@ const BlogDashboard = ({ onLogout }: BlogDashboardProps) => {
 
   const handleBackToPosts = () => setActiveTab("posts");
 
-  const publishedCount = posts.filter((post) => post.status === "published").length;
+  const publishedCount = posts.filter(
+    (post) => post.status === "published"
+  ).length;
   const draftCount = posts.filter((post) => post.status === "draft").length;
 
   // Search and pagination logic
@@ -244,7 +289,10 @@ const BlogDashboard = ({ onLogout }: BlogDashboardProps) => {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <p className="text-red-500">Error: {error}</p>
-        <button onClick={() => window.location.reload()} className="mt-4 text-tadegg-burgundy hover:underline">
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 text-tadegg-burgundy hover:underline"
+        >
           Try again
         </button>
       </div>
@@ -264,7 +312,9 @@ const BlogDashboard = ({ onLogout }: BlogDashboardProps) => {
               <h1 className="text-3xl md:text-4xl font-serif font-bold bg-gradient-to-br from-[#3D550C] to-[#98042D] bg-clip-text text-transparent">
                 Tadegg Blog Admin
               </h1>
-              <p className="text-gray-600 text-sm md:text-base">Manage your coffee blog content</p>
+              <p className="text-gray-600 text-sm md:text-base">
+                Manage your coffee blog content
+              </p>
             </div>
           </div>
 
@@ -385,8 +435,12 @@ const BlogDashboard = ({ onLogout }: BlogDashboardProps) => {
             <DialogDescription>This action cannot be undone.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={confirmDelete}>Delete</Button>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              Delete
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

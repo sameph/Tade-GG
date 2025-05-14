@@ -1,9 +1,12 @@
 import express from "express";
 import {
   createPost,
+  deleteBlogPost,
   getAllPosts,
   getPostBySlug,
   getRecommendedPosts,
+  publishPost,
+  updatePost,
   uploadAuth,
   // updatePost,
   // deletePost,
@@ -33,6 +36,10 @@ router.get("/latest", async (req, res) => {
 
 // Get recommended posts (exclude current post)
 router.get("/recommended", getRecommendedPosts);
+router.delete("/:id", deleteBlogPost);
+router.put("/:slug", verifyToken, updatePost);
+router.put("/:id/publish", verifyToken, publishPost);
+
 // Get only published posts
 // router.get("/published", getPublishedPosts);
 

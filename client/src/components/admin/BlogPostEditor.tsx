@@ -38,6 +38,9 @@ type BlogPostEditorProps = {
   post: Partial<BlogPost>;
   onChange: (e: { target: { name: string; value: string | string[] } }) => void;
   onCancel: () => void;
+  onSave?: () => void;
+  onPublish?: () => void;
+  onFormat?: () => void;
   isEditing?: boolean;
 };
 
@@ -45,6 +48,8 @@ const BlogPostEditor: React.FC<BlogPostEditorProps> = ({
   post,
   onChange,
   onCancel,
+  onSave,
+  onPublish,
   isEditing = false,
 }) => {
   const { toast } = useToast();
@@ -102,60 +107,60 @@ const BlogPostEditor: React.FC<BlogPostEditorProps> = ({
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
 
-  const handleSave = async (status: "draft" | "published" = "draft") => {
-    setIsSubmitting(true);
+  // const handleSave = async (status: "draft" | "published" = "draft") => {
+  //   setIsSubmitting(true);
 
-    try {
-      if (!post.title || !post.content) {
-        toast({
-          title: "Missing fields",
-          description: "Post title and content are required.",
-          variant: "destructive",
-        });
-        return;
-      }
+  //   try {
+  //     if (!post.title || !post.content) {
+  //       toast({
+  //         title: "Missing fields",
+  //         description: "Post title and content are required.",
+  //         variant: "destructive",
+  //       });
+  //       return;
+  //     }
 
-      let imageUrl = post.mainImage?.url;
-      if (selectedFile && status === "published") {
-        imageUrl = await uploadImage(selectedFile);
-      }
+  //     let imageUrl = post.mainImage?.url;
+  //     if (selectedFile && status === "published") {
+  //       imageUrl = await uploadImage(selectedFile);
+  //     }
 
-      const payload: BlogPost = {
-        ...post,
-        slug: post.slug || generateSlug(post.title),
-        author: user?.name || "admin",
-        status,
-        tags:
-          typeof post.tags === "string"
-            ? post.tags.split(",").map((t) => t.trim())
-            : post.tags || [],
-        mainImage: imageUrl ? { url: imageUrl } : undefined,
-        title: post.title,
-        content: post.content,
-        excerpt: post.excerpt || "",
-      } as BlogPost;
+  //     const payload: BlogPost = {
+  //       ...post,
+  //       slug: post.slug || generateSlug(post.title),
+  //       author: user?.name || "admin",
+  //       status,
+  //       tags:
+  //         typeof post.tags === "string"
+  //           ? post.tags.split(",").map((t) => t.trim())
+  //           : post.tags || [],
+  //       mainImage: imageUrl ? { url: imageUrl } : undefined,
+  //       title: post.title,
+  //       content: post.content,
+  //       excerpt: post.excerpt || "",
+  //     } as BlogPost;
 
-      const response = await createBlogPost(payload);
+  //     const response = await createBlogPost(payload);
 
-      toast({
-        title: status === "published" ? "Post published!" : "Draft saved",
-        description: "Your changes have been saved.",
-      });
+  //     toast({
+  //       title: status === "published" ? "Post published!" : "Draft saved",
+  //       description: "Your changes have been saved.",
+  //     });
 
-      if (status === "published") {
-        navigate(`/blog/${response?.post?.slug}`);
-      }
-    } catch (error) {
-      console.error("Post save error:", error);
-      toast({
-        title: "Save failed",
-        description: "There was an error saving your post.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  //     if (status === "published") {
+  //       navigate(`/blog/${response?.post?.slug}`);
+  //     }
+  //   } catch (error) {
+  //     console.error("Post save error:", error);
+  //     toast({
+  //       title: "Save failed",
+  //       description: "There was an error saving your post.",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -188,8 +193,8 @@ const BlogPostEditor: React.FC<BlogPostEditorProps> = ({
     <div className="bg-white/90 rounded-xl border border-gray-100 shadow-lg p-6">
       <PostHeader
         onCancel={onCancel}
-        onSave={() => handleSave("draft")}
-        onPublish={() => handleSave("published")}
+        onSave={onSave} // instead of () => handleSave("draft")
+        onPublish={onPublish} // instead of () => handleSave("published")
         isEditing={isEditing}
         isSubmitting={isSubmitting}
       />
@@ -257,5 +262,3 @@ const BlogPostEditor: React.FC<BlogPostEditorProps> = ({
 };
 
 export default BlogPostEditor;
-
-

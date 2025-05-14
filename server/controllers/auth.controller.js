@@ -298,6 +298,33 @@ export const logout = async (req, res) => {
 	res.status(200).json({ success: true, message: "Logged out successfully" });
 };
 
+export const deleteAdmin = async (req, res) => {
+  try {
+    const currentUser = req.user; // from verifyToken middleware
+    const targetUserId = req.params.id;
+
+    if (currentUser.role !== "owner") {
+      return res.status(403).json({ message: "Only owners can delete admins" });
+    }
+
+    const targetUser = await User.findById(targetUserId);
+    if (!targetUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (targetUser.role === "owner") {
+      return res.status(403).json({ message: "Cannot delete another owner" });
+    }
+
+    await User.findByIdAndDelete(targetUserId);
+    return res.json({ message: "Admin deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting admin:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
+
 export const forgotPassword = async (req, res) => {
 	const { email } = req.body;
 	try {

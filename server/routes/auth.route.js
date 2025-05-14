@@ -11,7 +11,8 @@ import {
   getAdminUsers,
   inviteAdmin,
   resendVerificationToken,
-  changePassword
+  changePassword,
+  deleteAdmin,
 } from "../controllers/auth.controller.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 import { ownerOnly } from "../middleware/ownerOnly.js";
@@ -21,6 +22,7 @@ const router = express.Router();
 router.get("/check-auth", verifyToken, checkAuth);
 router.get("/users", verifyToken, getAllUsers);
 router.get("/users/admins", verifyToken, getAdminUsers);
+router.delete("/users/:id", verifyToken, deleteAdmin);
 
 router.post("/login", login);
 router.post("/google", google);

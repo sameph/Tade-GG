@@ -10,12 +10,30 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "react-toastify";
-import { Mail, Users, UserRoundPlus, ArrowLeft, User } from "lucide-react";
+import {
+  Mail,
+  Users,
+  UserRoundPlus,
+  ArrowLeft,
+  User,
+  Trash2,
+} from "lucide-react";
 import axios from "axios";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { useAuthStore } from "@/store/authStore";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface AdminUser {
   _id: string;
@@ -31,6 +49,9 @@ const AdminSettings = ({ onBack }: { onBack?: () => void }) => {
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
 
   const { user } = useAuthStore();
 
@@ -197,6 +218,19 @@ const AdminSettings = ({ onBack }: { onBack?: () => void }) => {
                     <div className="text-xs text-gray-500">
                       Last active: {formatLastLogin(admin.lastLogin)}
                     </div>
+                    {user?.role === "owner" && user._id !== admin._id && (
+                      <Button
+                        variant="ghost"
+                        className="text-red-600 hover:bg-red-100"
+                        onClick={() => {
+                          setSelectedAdmin(admin);
+                          setShowDialog(true);
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Delete
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))
@@ -252,6 +286,53 @@ const AdminSettings = ({ onBack }: { onBack?: () => void }) => {
             account.
           </CardFooter>
         </Card>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {selectedAdmin && (
+        <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-red-600">
+                Remove Admin?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to remove{" "}
+                <span className="font-semibold text-black">
+                  {selectedAdmin.email}
+                </span>{" "}
+                from the admin team? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-red-600 hover:bg-red-700 text-white"
+                onClick={async () => {
+                  try {
+                    await axios.delete(`/api/auth/users/${selectedAdmin._id}`, {
+                      withCredentials: true,
+                    });
+                    setAdminUsers((prev) =>
+                      prev.filter((a) => a._id !== selectedAdmin._id)
+                    );
+                    toast.success(`Deleted admin: ${selectedAdmin.email}`);
+                  } catch (error) {
+                    const errorMessage = axios.isAxiosError(error)
+                      ? error.response?.data?.message || "Failed to delete admin"
+                      : "Failed to delete admin";
+                    toast.error(errorMessage);
+                  } finally {
+                    setShowDialog(false);
+                    setSelectedAdmin(null);
+                  }
+                }}
+              >
+                Yes, Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </div>
   );

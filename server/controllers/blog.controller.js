@@ -1,6 +1,7 @@
 import ImageKit from "imagekit";
 import { BlogPost } from "../models/blog.model.js";
 import { generateUniqueSlug } from "../utils/helper.js";
+import mongoose from "mongoose";
 
 // Initialize ImageKit
 const imageKit = new ImageKit({
@@ -53,6 +54,52 @@ export const createPost = async (req, res) => {
   }
 };
 
+export const deleteBlogPost = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: "Invalid post ID" });
+  }
+
+  try {
+    const deletedPost = await BlogPost.findByIdAndDelete(id);
+
+    if (!deletedPost) {
+      return res.status(404).json({ success: false, message: "Post not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Post "${deletedPost.title}" deleted successfully.`,
+      post: deletedPost,
+    });
+  } catch (error) {
+    console.error("Delete Error:", error);
+    return res.status(500).json({ success: false, message: "Server error during deletion" });
+  }
+};
+
+export const updatePost = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const update = req.body;
+
+    const post = await BlogPost.findOneAndUpdate({ slug }, update, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!post) {
+      return res.status(404).json({ success: false, message: "Post not found" });
+    }
+
+    res.status(200).json({ success: true, post });
+  } catch (error) {
+    console.error("Error updating post:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 // Upload authentication for ImageKit
 export const uploadAuth = async (req, res) => {
   const { token, expire, signature } = imageKit.getAuthenticationParameters();
@@ -69,6 +116,27 @@ export const getAllPosts = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+export const publishPost = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const post = await BlogPost.findByIdAndUpdate(
+      id,
+      { status: "published" },
+      { new: true }
+    );
+
+    if (!post) {
+      return res.status(404).json({ success: false, message: "Post not found" });
+    }
+
+    res.status(200).json({ success: true, post });
+  } catch (error) {
+    console.error("Publish error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 
 // Get recommended posts (excluding current post)
 export const getRecommendedPosts = async (req, res) => {
