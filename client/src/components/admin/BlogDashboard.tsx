@@ -23,6 +23,7 @@ import { Plus, Coffee } from "lucide-react";
 import AdminSettings from "./AdminSetting";
 import { UserProfile } from "./UserProfile";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const toastOptions = {
   position: "top-center" as const,
@@ -61,6 +62,7 @@ const BlogDashboard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const navigate = useNavigate();
 
   // Fetch posts
   const fetchPosts = useCallback(async () => {
@@ -77,8 +79,7 @@ const BlogDashboard = () => {
       setError(
         err instanceof Error ? err.message : "An unknown error occurred"
       );
-      toast.error( "Failed to load blog posts", toastOptions
-       );
+      toast.error("Failed to load blog posts", toastOptions);
     } finally {
       setLoading(false);
     }
@@ -115,71 +116,77 @@ const BlogDashboard = () => {
   };
 
   const handleSavePost = async () => {
-  try {
-    const method = activePost ? "PUT" : "POST";
-    const url = activePost
-      ? `/api/blogs/${editedPost.slug}`
-      : "/api/blogs/create";
+    try {
+      const method = activePost ? "PUT" : "POST";
+      const url = activePost
+        ? `/api/blogs/${editedPost.slug}`
+        : "/api/blogs/create";
 
-    const response = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...editedPost, status: "draft" }), // Save as draft
-    });
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...editedPost, status: "draft" }), // Save as draft
+      });
 
-    if (!response.ok) throw new Error("Failed to save post");
-    const data = await response.json();
+      if (!response.ok) throw new Error("Failed to save post");
+      const data = await response.json();
 
-    setPosts((prevPosts) =>
-      activePost
-        ? prevPosts.map((post) =>
-            post._id === activePost ? data.post : post
-          )
-        : [data.post, ...prevPosts]
-    );
-    toast.success( `"${data.post.title}" has been ${
-        activePost ? "updated" : "created"
-      }.`, toastOptions
-    );
-
-    setIsEditing(false);
-    setActivePost(null);
-  } catch (err) {
-    toast.error( err instanceof Error ? err.message : "Failed to save post", toastOptions
+      setPosts((prevPosts) =>
+        activePost
+          ? prevPosts.map((post) =>
+              post._id === activePost ? data.post : post
+            )
+          : [data.post, ...prevPosts]
       );
-  }
-};
+      toast.success(
+        `"${data.post.title}" has been ${activePost ? "updated" : "created"}.`,
+        toastOptions
+      );
 
-const handlePublishPost = async () => {
-  try {
-    if (!editedPost._id) await handleSavePost(); // Save first if it's new
+      setIsEditing(false);
+      setActivePost(null);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to save post",
+        toastOptions
+      );
+    }
+  };
 
-    const response = await fetch(`/api/blogs/${editedPost._id}/publish`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-    });
+  const handlePublishPost = async () => {
+    try {
+      const method = editedPost._id ? "PUT" : "POST";
+      const url = editedPost._id
+        ? `/api/blogs/${editedPost.slug}`
+        : "/api/blogs/create";
 
-    if (!response.ok) throw new Error("Failed to publish post");
-    const data = await response.json();
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...editedPost, status: "published" }), // Save as published directly
+      });
 
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post._id === editedPost._id ? data.post : post
-      )
-    );
+      if (!response.ok) throw new Error("Failed to publish post");
+      const data = await response.json();
 
-    toast.success( `"${data.post.title}" is now live!`, toastOptions
-    );
+      setPosts((prevPosts) =>
+        editedPost._id
+          ? prevPosts.map((post) =>
+              post._id === editedPost._id ? data.post : post
+            )
+          : [data.post, ...prevPosts]
+      );
 
-    setIsEditing(false);
-    setActivePost(null);
-  } catch (err) {
-    toast.error(
+      toast.success(`"${data.post.title}" is now published!`, toastOptions);
+      setIsEditing(false);
+      setActivePost(null);
+    } catch (err) {
+      toast.error(
         err instanceof Error ? err.message : "Failed to publish post",
-      toastOptions);
-  }
-};
-
+        toastOptions
+      );
+    }
+  };
 
   const handleDeletePost = (id: string) => {
     setIsDialogOpen(true);
@@ -207,12 +214,11 @@ const handlePublishPost = async () => {
 
       setPosts((prev) => prev.filter((p) => p._id !== selectedPostId));
 
-      toast.success(`"${post.title}" has been removed.`,
-        toastOptions);
+      toast.success(`"${post.title}" has been removed.`, toastOptions);
     } catch (err) {
       toast.error(
-          err instanceof Error ? err.message : "Failed to delete the post",
-        );
+        err instanceof Error ? err.message : "Failed to delete the post"
+      );
     } finally {
       setIsDialogOpen(false);
       setSelectedPostId(null);
@@ -265,8 +271,11 @@ const handlePublishPost = async () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <p>Loading blog posts...</p>
+      <div className="flex items-center justify-center min-h-[200px] flex-col space-y-4">
+        <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-gray-300 tracking-wide uppercase">
+          Loading blog posts...
+        </p>
       </div>
     );
   }
@@ -291,9 +300,17 @@ const handlePublishPost = async () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
           <div className="flex items-center">
-            <div className="bg-gradient-to-br from-[#3D550C] to-[#98042D] p-3 rounded-xl mr-4 shadow-lg">
-              <Coffee size={36} className="text-white" />
+            <div
+              className="] rounded-full mr-4 shadow-lg cursor-pointer transition-transform hover:scale-105 hover:shadow-xl duration-300 w-14 h-14 flex items-center justify-center"
+              onClick={() => navigate("/")}
+            >
+              <img
+                src="/logo.png"
+                alt="Logo"
+                className="w-15 h-15 object-contain rounded-full"
+              />
             </div>
+
             <div>
               <h1 className="text-3xl md:text-4xl font-serif font-bold bg-gradient-to-br from-[#3D550C] to-[#98042D] bg-clip-text text-transparent">
                 Tadegg Blog Admin

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { CheckCircle, Calendar, User, Tag } from "lucide-react";
+import { CheckCircle,  User, Tag } from "lucide-react";
 
 interface Props {
   post: any;

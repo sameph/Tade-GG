@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, Phone, MapPin, Coffee } from "lucide-react";
 import { toast } from "react-toastify";
+import emailjs from '@emailjs/browser';
 
 const toastOptions = {
   position: "top-center" as const,
@@ -16,10 +17,11 @@ const toastOptions = {
 };
 
 const ContactSection = () => {
+  const form = useRef<HTMLFormElement>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    company: "",
+    subject: "",
     message: "",
   });
 
@@ -32,18 +34,31 @@ const ContactSection = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would normally send the form data to a server
-    console.log("Form submitted:", formData);
+    
+    if (!form.current) return;
 
-    toast("Thank you for contacting us. We'll be in touch soon.", toastOptions);
-
-    // Reset form
-    setFormData({
-      name: "",
-      email: "",
-      company: "",
-      message: "",
-    });
+    emailjs
+      .sendForm(
+        import.meta.env.VITE_PUBLIC_EMAILJS_SERVICE_ID as string,
+        import.meta.env.VITE_PUBLIC_EMAILJS_TEMPLATE_ID as string,
+        form.current,
+        import.meta.env.VITE_PUBLIC_EMAILJS_PUBLIC_KEY as string
+      )
+      .then(
+        () => {
+          toast.success("Thank you for contacting us. We'll be in touch soon.", toastOptions);
+          setFormData({
+            name: "",
+            email: "",
+            subject: "",
+            message: "",
+          });
+        },
+        (error) => {
+          console.error('Email sending failed:', error);
+          toast.error("Failed to send message. Please try again later.", toastOptions);
+        },
+      );
   };
 
   return (
@@ -118,7 +133,7 @@ const ContactSection = () => {
                 Send Us a Message
               </h3>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form ref={form} onSubmit={handleSubmit} className="space-y-5">
                 <div>
                   <label
                     htmlFor="name"
@@ -158,17 +173,17 @@ const ContactSection = () => {
 
                 <div>
                   <label
-                    htmlFor="company"
+                    htmlFor="subject"
                     className="block text-sm font-medium text-tadegg-brown mb-1"
                   >
-                    Company
+                    Subject
                   </label>
                   <Input
-                    id="company"
-                    name="company"
-                    value={formData.company}
+                    id="subject"
+                    name="subject"
+                    value={formData.subject}
                     onChange={handleChange}
-                    placeholder="Your Company"
+                    placeholder="Your subject"
                     className="bg-white border-tadegg-brown/20 focus-visible:ring-tadegg-green"
                   />
                 </div>

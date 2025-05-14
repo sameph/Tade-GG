@@ -5,12 +5,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { FeaturedImageUploader } from "./FeaturedImageUploader";
 import { PostSettings } from "./PostSettings";
 import PostHeader from "./PostHeader";
-// import { createBlogPost } from "./utils/createPosts";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-// import { useNavigate } from "react-router-dom";
 import { upload } from "@imagekit/react";
-// import { useAuthStore } from "@/store/authStore";
 import {toast} from 'react-toastify';
 
 const toastOptions = {
