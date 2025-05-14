@@ -1,11 +1,11 @@
-
 import { Coffee } from "lucide-react";
 
 const AboutSection = () => {
   return (
     <section id="about" className="section-padding bg-white">
-      <div className="container mx-auto">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-2 gap-12 items-center">
+          {/* Image Section */}
           <div className="relative">
             <div className="rounded-lg overflow-hidden">
               <img
@@ -14,56 +14,61 @@ const AboutSection = () => {
                 className="w-full h-auto object-cover rounded-lg"
               />
             </div>
-            <div className="absolute -bottom-6 -right-6 bg-tadegg-green p-6 rounded-lg shadow-lg md:max-w-xs">
-              <div className="flex items-center gap-2 text-white mb-2">
-                <Coffee size={24} />
-                <h3 className="font-serif text-xl">Our Heritage</h3>
+            {/* Smaller 'Our Heritage' section */}
+            <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 bg-tadegg-green p-3 sm:p-4 rounded-lg shadow-md w-auto max-w-xs">
+              <div className="flex items-center gap-2 text-white">
+                <Coffee size={16} className="sm:size-20" />
+                <h3 className="font-serif text-sm sm:text-base">Our Heritage</h3>
               </div>
-              <p className="text-white/90 text-sm">
-                Ethiopia is the birthplace of coffee, and our company continues this rich tradition with exceptional quality.
+              <p className="text-white/80 text-xs sm:text-sm">
+                Ethiopia is the birthplace of coffee, and we continue this rich tradition with exceptional quality.
               </p>
             </div>
           </div>
 
+          {/* Text Content Section */}
           <div className="space-y-6">
-            <div className="inline-flex items-center px-4 py-2 bg-tadegg-cream text-tadegg-burgundy rounded-full">
-              <span className="text-sm font-medium">Est. 1997</span>
+            <div className="inline-flex items-center px-3 py-1 bg-tadegg-cream text-tadegg-burgundy rounded-full text-sm font-medium">
+              Est. 1997
             </div>
-            
-            <h2 className="section-title">The Heart of Ethiopian Coffee Excellence</h2>
-            
-            <p className="text-lg text-tadegg-brown/80">
+
+            <h2 className="section-title text-2xl sm:text-3xl md:text-4xl">
+              The Heart of Ethiopian Coffee Excellence
+            </h2>
+
+            <p className="text-base sm:text-lg text-tadegg-brown/80">
               Tadegg is a premier Ethiopian coffee exporter dedicated to bringing the world's finest arabica coffee beans to international markets. Our journey began in the misty highlands of Ethiopia, the birthplace of coffee.
             </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-              <div className="bg-tadegg-cream/50 p-6 rounded-lg">
-                <h4 className="font-serif text-lg text-tadegg-green font-semibold mb-2">Our Mission</h4>
-                <p className="text-tadegg-brown/80">To deliver exceptional Ethiopian coffee while supporting sustainable farming practices and fair trade relationships.</p>
+
+            {/* Mission & Vision */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-tadegg-cream/50 p-4 rounded-lg">
+                <h4 className="font-serif text-lg text-tadegg-green font-semibold mb-1">Our Mission</h4>
+                <p className="text-tadegg-brown/80 text-sm sm:text-base">
+                  Deliver exceptional Ethiopian coffee while supporting sustainable farming practices.
+                </p>
               </div>
-              
-              <div className="bg-tadegg-cream/50 p-6 rounded-lg">
-                <h4 className="font-serif text-lg text-tadegg-green font-semibold mb-2">Our Vision</h4>
-                <p className="text-tadegg-brown/80">To be recognized globally as the standard-bearer for Ethiopian coffee excellence and ethical business practices.</p>
+              <div className="bg-tadegg-cream/50 p-4 rounded-lg">
+                <h4 className="font-serif text-lg text-tadegg-green font-semibold mb-1">Our Vision</h4>
+                <p className="text-tadegg-brown/80 text-sm sm:text-base">
+                  To be recognized globally for Ethiopian coffee excellence and ethical practices.
+                </p>
               </div>
             </div>
-            
-            <div className="pt-4">
-              <div className="flex items-center gap-6 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <span className="text-4xl font-serif font-bold text-tadegg-burgundy">25+</span>
-                  <span className="text-sm text-tadegg-brown/70">Years of<br/>Experience</span>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <span className="text-4xl font-serif font-bold text-tadegg-burgundy">40+</span>
-                  <span className="text-sm text-tadegg-brown/70">Countries<br/>Served</span>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <span className="text-4xl font-serif font-bold text-tadegg-burgundy">5000+</span>
-                  <span className="text-sm text-tadegg-brown/70">Partner<br/>Farmers</span>
-                </div>
+
+            {/* Stats */}
+            <div className="flex flex-wrap items-start gap-4">
+              <div className="flex items-start gap-2">
+                <span className="text-3xl font-serif font-bold text-tadegg-burgundy">25+</span>
+                <span className="text-sm text-tadegg-brown/70">Years of Experience</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-3xl font-serif font-bold text-tadegg-burgundy">40+</span>
+                <span className="text-sm text-tadegg-brown/70">Countries Served</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-3xl font-serif font-bold text-tadegg-burgundy">5000+</span>
+                <span className="text-sm text-tadegg-brown/70">Partner Farmers</span>
               </div>
             </div>
           </div>

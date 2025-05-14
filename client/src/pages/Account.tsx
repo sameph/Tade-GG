@@ -83,13 +83,13 @@ export default function Account() {
 
         <div className="flex flex-col md:flex-row w-full rounded-3xl shadow-xl overflow-hidden bg-white border border-gray-200">
           {/* Sidebar Profile Card */}
-          <div className="bg-gradient-to-b from-[#193617] to-[#2a5c3a] text-white p-8 md:w-1/3 flex flex-col items-center justify-center relative">
+          <div className="bg-gradient-to-b from-[#193617] to-[#2a5c3a] text-white p-8 md:w-1/3 flex items-center justify-center relative">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#99042d] via-[#d46a4a] to-[#99042d]"></div>
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
-              className="text-center space-y-6"
+              className="text-center space-y-6 flex flex-col items-center"
             >
               <div className="w-28 h-28 rounded-full bg-white/10 flex items-center justify-center text-4xl font-bold uppercase border-2 border-white/20">
                 {user.name?.[0]}
@@ -99,7 +99,7 @@ export default function Account() {
                 <p className="text-sm text-gray-300 mt-1">{user.email}</p>
               </div>
               <div className="w-full h-px bg-white/20"></div>
-              <p className="text-sm text-gray-300">
+              <p className="text-sm text-gray-300 text-center">
                 Manage your profile information and security settings
               </p>
             </motion.div>

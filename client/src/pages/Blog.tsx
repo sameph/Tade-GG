@@ -1,4 +1,3 @@
-import React from 'react';
 import Navbar from '@/components/Navbar';
 import BlogHeader from '@/components/blog/BlogHeader';
 import BlogList from '@/components/blog/BlogList';

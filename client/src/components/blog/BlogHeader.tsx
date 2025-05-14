@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Coffee, Bean } from 'lucide-react';
 
@@ -32,10 +31,10 @@ const BlogHeader = () => {
           
           {/* Coffee beans image in a container */}
           <div className="flex-shrink-0 w-full md:w-1/3 relative">
-            <div className="bg-white p-3 rounded-lg shadow-lg transform rotate-2 hover:rotate-0 transition-transform duration-500">
+            <div className="bg-white p-1 rounded-lg shadow-lg transform rotate-2 hover:rotate-0 transition-transform duration-500">
               <div className="overflow-hidden rounded-md relative aspect-square">
                 <img 
-                  src="https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                  src="/tade.png" 
                   alt="Fresh coffee beans" 
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                 />
