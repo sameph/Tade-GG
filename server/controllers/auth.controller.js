@@ -3,13 +3,12 @@ import crypto from "crypto";
 
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
 import {
-	sendPasswordResetEmail,
 	sendResetSuccessEmail,
-	sendWelcomeEmail,
 } from "../mailtrap/emails.js";
 import { User } from "../models/user.model.js";
 import transporter from "../config/nodemailer.js";
-import { VERIFICATION_EMAIL_TEMPLATE, WELCOME_EMAIL_TEMPLATE } from "../mailtrap/emailTemplates.js";
+import { PASSWORD_RESET_EMAIL_TEMPLATE, VERIFICATION_EMAIL_TEMPLATE, WELCOME_EMAIL_TEMPLATE } from "../mailtrap/emailTemplates.js";
+import { generateStrongPassword } from "../utils/helper.js";
 
 // ... (keep all your existing functions)
 
@@ -72,8 +71,10 @@ export const inviteAdmin = async (req, res) => {
     const verificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
     const verificationLink = `${process.env.CLIENT_URL}/login`;
 
-    // Hash the default password
-    const hashedPassword = await bcryptjs.hash("tadegg123", 10); // saltRounds = 10
+    const randomPassword = generateStrongPassword();
+    
+    // Hash the generated password
+    const hashedPassword = await bcryptjs.hash(randomPassword, 10); // saltRounds = 10
 
     // Create unverified admin user
     const user = new User({
@@ -92,15 +93,16 @@ export const inviteAdmin = async (req, res) => {
     const htmlContent = VERIFICATION_EMAIL_TEMPLATE
       .replace("{verificationCode}", verificationToken)
       .replace("{verificationLink}", verificationLink)
-      .replace("{year}", new Date().getFullYear());
+      .replace("{year}", new Date().getFullYear())
+      .replace("{temporaryPassword}", randomPassword);
 
-    // Send verification email
+    // Send verification email with the generated password
     const mailOptions = {
       from: process.env.SENDER_EMAIL,
       to: email,
       subject: "Admin Invitation",
-      text: `You have been invited to join as an admin. Your verification code is ${verificationToken}. Please verify your email within 24 hours.`,
-      html: htmlContent,
+      text: `You have been invited to join as an admin. Your verification code is ${verificationToken} and your temporary password is ${randomPassword}. Please verify your email within 24 hours and change your password after login.`,
+      html: htmlContent.replace("{temporaryPassword}", randomPassword),
     };
 
     await transporter.sendMail(mailOptions);
@@ -336,49 +338,56 @@ export const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      // Don't reveal whether email exists for security
+      return res.status(200).json({ 
+        success: true,
+        message: "If this email exists in our system, you'll receive a password reset email" 
+      });
     }
 
-    // Generate 6-digit verification code
-    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
-    const verificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-    const hashedPassword = await bcryptjs.hash("tadegg123", 10);
 
+    const temporaryPassword = generateStrongPassword();
+    const hashedPassword = await bcryptjs.hash(temporaryPassword, 10);
 
-    // Save token to user
-    user.resetPasswordToken = verificationToken;
-    user.resetPasswordExpiresAt = verificationTokenExpiresAt;
+    // Update user with new temporary password
     user.password = hashedPassword;
+    user.passwordChangedAt = Date.now();
+    user.isPasswordTemporary = true;
+    user.failedLoginAttempts = 0; // Reset failed attempts
+    user.passwordResetRequestedAt = new Date();
 
     await user.save();
 
-    // Email content
-    const verificationLink = `${process.env.CLIENT_URL}/login`; // Link to your reset UI
-    const htmlContent = VERIFICATION_EMAIL_TEMPLATE
-      .replace("{verificationCode}", verificationToken)
-      .replace("{verificationLink}", verificationLink)
+    // Prepare email
+    const loginLink = `${process.env.CLIENT_URL}/login`;
+    const htmlContent = PASSWORD_RESET_EMAIL_TEMPLATE
+      .replace("{temporaryPassword}", temporaryPassword)
+      .replace("{verificationLink}", loginLink)
       .replace("{year}", new Date().getFullYear());
 
     const mailOptions = {
       from: process.env.SENDER_EMAIL,
       to: email,
-      subject: "Tadegg Admin Password Reset",
-      text: `Use this verification code to reset your password: ${verificationToken}`,
+      subject: "Your Temporary Password for Tede GG",
+      text: `Your temporary password is: ${temporaryPassword}\n\nPlease use this to login at ${loginLink} and change your password immediately.\n\nThis is an automated message - please do not reply.`,
       html: htmlContent,
     };
 
-    // Send email
-    await transporter.sendMail(mailOptions);
+    // Send email (fire and forget - don't await)
+    transporter.sendMail(mailOptions).catch(err => {
+      console.error("Email sending error:", err);
+    });
 
+    // Don't include sensitive info in response
     return res.status(200).json({
       success: true,
-      message: "Verification code sent to your email address",
+      message: "Password reset instructions sent to your email if it exists in our system",
     });
   } catch (error) {
     console.error("Forgot password error:", error);
     return res.status(500).json({
       success: false,
-      message: "Server error, please try again later",
+      message: "An error occurred. Please try again later.",
     });
   }
 };

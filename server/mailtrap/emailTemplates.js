@@ -42,7 +42,7 @@ export const VERIFICATION_EMAIL_TEMPLATE = `
         </p>
 
         <div style="background-color: #f5f5f5; padding: 15px; border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold; color: #d84315; margin: 20px 0;">
-          Default Password: <span style="color: #d84315;">tadegg123</span>
+          Default Password: <span style="color: #d84315;">{temporaryPassword}</span>
         </div>
 
         <p style="font-size: 15px; color: #333;">
@@ -130,7 +130,73 @@ export const WELCOME_EMAIL_TEMPLATE = `
 </body>
 </html>
 `;
+export const PASSWORD_RESET_EMAIL_TEMPLATE = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Your Temporary Password</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
+  <table align="center" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 30px auto;">
+    <tr style="background: linear-gradient(to right, #2e7d32, #43a047);">
+      <td style="padding: 30px; text-align: center;">
+        <h1 style="margin: 0; color: #ffffff; font-size: 24px;">Tede GG Password Reset</h1>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 30px;">
+        <p style="font-size: 16px; color: #333;">Hello,</p>
 
+        <p style="font-size: 16px; color: #333;">
+          Your password has been reset. Please use the following temporary password to log in:
+        </p>
+
+        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold; color: #d84315; margin: 20px 0;">
+          Temporary Password: <span style="color: #d84315;">{temporaryPassword}</span>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="{verificationLink}" style="background-color: #2e7d32; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            Login Now
+          </a>
+        </div>
+
+        <p style="font-size: 15px; color: #333;">
+          <strong>Important:</strong> You must change this temporary password immediately after logging in.
+        </p>
+
+        <p style="font-size: 16px; color: #333;">
+          This is an automated password reset. If you didn't request this change, please contact us immediately.
+        </p>
+
+        <p style="font-size: 16px; color: #333;">
+          For security reasons:
+          <ul style="font-size: 15px; color: #333; padding-left: 20px;">
+            <li>Do not share this password with anyone</li>
+            <li>Change your password immediately after login</li>
+            <li>Use a strong, unique password</li>
+          </ul>
+        </p>
+
+        <p style="font-size: 16px; color: #333;">
+          Questions? Contact us at <a href="mailto:support@tedegg.com" style="color: #2e7d32;">support@tedegg.com</a>.
+        </p>
+
+        <p style="font-size: 16px; color: #333;">Best regards,<br/>The Tede GG Security Team</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color: #f1f1f1; padding: 20px; text-align: center; font-size: 12px; color: #888;">
+        <p style="margin: 0;">© {year} Tede GG. All rights reserved.</p>
+        <p style="margin: 5px 0;">This is an automated email — please do not reply.</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`;
 export const PASSWORD_RESET_SUCCESS_TEMPLATE = `
 <!DOCTYPE html>
 <html lang="en">
@@ -168,31 +234,4 @@ export const PASSWORD_RESET_SUCCESS_TEMPLATE = `
 </html>
 `;
 
-export const PASSWORD_RESET_REQUEST_TEMPLATE = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reset Your Password</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: linear-gradient(to right, #4CAF50, #45a049); padding: 20px; text-align: center;">
-    <h1 style="color: white; margin: 0;">Password Reset</h1>
-  </div>
-  <div style="background-color: #f9f9f9; padding: 20px; border-radius: 0 0 5px 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-    <p>Hello,</p>
-    <p>We received a request to reset your password. If you didn't make this request, please ignore this email.</p>
-    <p>To reset your password, click the button below:</p>
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="{resetURL}" style="background-color: #4CAF50; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
-    </div>
-    <p>This link will expire in 1 hour for security reasons.</p>
-    <p>Best regards,<br>Your App Team</p>
-  </div>
-  <div style="text-align: center; margin-top: 20px; color: #888; font-size: 0.8em;">
-    <p>This is an automated message, please do not reply to this email.</p>
-  </div>
-</body>
-</html>
-`;
+
