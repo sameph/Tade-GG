@@ -17,23 +17,52 @@ const ForgotPassword = ({ onClose }: ForgotPasswordProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!email || !email.includes('@')) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
-    
-    // Simulate sending a verification code
-    setTimeout(() => {
+
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to send verification code');
+      }
+
       toast({
         title: "Verification Code Sent",
-        description: "Please check your email for the 6-digit verification code.",
+        description: "Please check your email for the 6-digit verification code."
       });
-      // Store email in session storage for the verification step
+
       sessionStorage.setItem('resetEmail', email);
-      // Navigate to the verification code page
-      navigate('/admin/verify-code');
-      setIsLoading(false);
+      navigate('/login');
       onClose();
-    }, 1500);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "An error occurred. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -41,7 +70,7 @@ const ForgotPassword = ({ onClose }: ForgotPasswordProps) => {
       <div className="space-y-2">
         <Label htmlFor="reset-email">Email Address</Label>
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
           <Input
             id="reset-email"
             type="email"
@@ -50,26 +79,27 @@ const ForgotPassword = ({ onClose }: ForgotPasswordProps) => {
             onChange={(e) => setEmail(e.target.value)}
             className="pl-10"
             required
+            autoFocus
           />
         </div>
         <p className="text-sm text-muted-foreground">
-          We'll send a 6-digit verification code to this email address.
+          We’ll send a 6-digit verification code to this email address.
         </p>
       </div>
-      
+
       <DialogFooter>
         <Button 
           type="button" 
           variant="outline" 
           onClick={onClose}
-          className="mr-2"
+          disabled={isLoading}
         >
           Cancel
         </Button>
         <Button 
           type="submit" 
           className="bg-[#98042D] hover:bg-[#98042D]/90"
-          disabled={isLoading || !email}
+          disabled={isLoading || !email.includes('@')}
         >
           {isLoading ? "Sending..." : "Send Verification Code"}
         </Button>

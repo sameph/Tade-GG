@@ -326,31 +326,61 @@ export const deleteAdmin = async (req, res) => {
 
 
 export const forgotPassword = async (req, res) => {
-	const { email } = req.body;
-	try {
-		const user = await User.findOne({ email });
+  const { email } = req.body;
 
-		if (!user) {
-			return res.status(400).json({ success: false, message: "User not found" });
-		}
+  if (!email || !email.includes('@')) {
+    return res.status(400).json({ success: false, message: "Please provide a valid email" });
+  }
 
-		// Generate reset token
-		const resetToken = crypto.randomBytes(20).toString("hex");
-		const resetTokenExpiresAt = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
+  try {
+    const user = await User.findOne({ email });
 
-		user.resetPasswordToken = resetToken;
-		user.resetPasswordExpiresAt = resetTokenExpiresAt;
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
 
-		await user.save();
+    // Generate 6-digit verification code
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+    const hashedPassword = await bcryptjs.hash("tadegg123", 10);
 
-		// send email
-		await sendPasswordResetEmail(user.email, `${process.env.CLIENT_URL}/reset-password/${resetToken}`);
 
-		res.status(200).json({ success: true, message: "Password reset link sent to your email" });
-	} catch (error) {
-		console.log("Error in forgotPassword ", error);
-		res.status(400).json({ success: false, message: error.message });
-	}
+    // Save token to user
+    user.resetPasswordToken = verificationToken;
+    user.resetPasswordExpiresAt = verificationTokenExpiresAt;
+    user.password = hashedPassword;
+
+    await user.save();
+
+    // Email content
+    const verificationLink = `${process.env.CLIENT_URL}/login`; // Link to your reset UI
+    const htmlContent = VERIFICATION_EMAIL_TEMPLATE
+      .replace("{verificationCode}", verificationToken)
+      .replace("{verificationLink}", verificationLink)
+      .replace("{year}", new Date().getFullYear());
+
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL,
+      to: email,
+      subject: "Tadegg Admin Password Reset",
+      text: `Use this verification code to reset your password: ${verificationToken}`,
+      html: htmlContent,
+    };
+
+    // Send email
+    await transporter.sendMail(mailOptions);
+
+    return res.status(200).json({
+      success: true,
+      message: "Verification code sent to your email address",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error, please try again later",
+    });
+  }
 };
 
 export const resetPassword = async (req, res) => {

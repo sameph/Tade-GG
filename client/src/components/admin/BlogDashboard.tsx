@@ -24,13 +24,11 @@ import { Plus, Coffee } from "lucide-react";
 import AdminSettings from "./AdminSetting";
 import { UserProfile } from "./UserProfile";
 
-interface BlogDashboardProps {
-  onLogout: () => void;
-}
+
 
 const POSTS_PER_PAGE = 6;
 
-const BlogDashboard = ({ onLogout }: BlogDashboardProps) => {
+const BlogDashboard = () => {
   const { toast } = useToast();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
