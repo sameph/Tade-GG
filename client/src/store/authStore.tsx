@@ -24,9 +24,11 @@ interface AuthStore {
   login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   verifyEmail: (code: string) => Promise<any>;
+  resendVerificationToken: (email: string) => Promise<void>;
   checkAuth: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (token: string, password: string) => Promise<void>;
+  changePassword: (name: string, password: string, email: string) => Promise<void>;
   googleLogin: () => Promise<void>;
 }
 
@@ -147,6 +149,39 @@ export const useAuthStore = create<AuthStore>((set) => ({
       throw error;
     }
   },
+
+  resendVerificationToken: async (email: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await axios.post(`${API_URL}/resend-verification`, { email });
+      set({ message: response.data.message, isLoading: false });
+    } catch (error) {
+      const err = error as AxiosError<{ message: string }>;
+      set({
+        error: err.response?.data?.message || "Error resending verification code",
+        isLoading: false,
+      });
+      throw error;
+    }
+  },  
+  changePassword: async (name: string, password: string, email: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await axios.post(`${API_URL}/change-password`, {
+        name,
+        password,
+        email,
+      });
+      set({ message: response.data.message, isLoading: false });
+    } catch (error) {
+      const err = error as AxiosError<{ message: string }>;
+      set({
+        isLoading: false,
+        error: err.response?.data?.message || "Error changing password",
+      });
+      throw error;
+    }
+  },  
 
   checkAuth: async () => {
     set({ isCheckingAuth: true, error: null });

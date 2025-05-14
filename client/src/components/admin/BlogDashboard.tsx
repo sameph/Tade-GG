@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Users, Plus, Coffee } from "lucide-react";
+import { Plus, Coffee } from "lucide-react";
 import AdminSettings from "./AdminSetting";
 import { UserProfile } from "./UserProfile";
 

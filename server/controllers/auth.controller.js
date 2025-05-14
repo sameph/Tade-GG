@@ -120,7 +120,45 @@ export const inviteAdmin = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+export const resendVerificationToken = async (req, res) => {
+  const { email } = req.body;
 
+  try {
+    const user = await User.findOne({ email });
+    if (!user || user.isVerified) {
+      return res.status(400).json({ message: "User not found or already verified" });
+    }
+
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+    const verificationLink = `${process.env.CLIENT_URL}/login`;
+
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpiresAt = verificationTokenExpiresAt;
+    await user.save();
+
+    const htmlContent = VERIFICATION_EMAIL_TEMPLATE
+      .replace("{verificationCode}", verificationToken)
+      .replace("{verificationLink}", verificationLink)
+      .replace("{year}", new Date().getFullYear());
+
+    // Send verification email
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL,
+      to: email,
+      subject: "Admin Invitation",
+      text: `You have been invited to join as an admin. Your verification code is ${verificationToken}. Please verify your email within 24 hours.`,
+      html: htmlContent,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ message: "Verification code resent" });
+  } catch (err) {
+    console.error("Resend error:", err);
+    res.status(500).json({ message: "Failed to resend code" });
+  }
+};
 export const verifyEmail = async (req, res) => {
   const { code } = req.body;
   try {
@@ -163,6 +201,31 @@ export const verifyEmail = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+
+export const changePassword = async (req, res) => {
+  try {
+    const { name, password } = req.body;
+
+    if (!name || !password) {
+      return res.status(400).json({ message: "Name and password are required" });
+    }
+
+    const user = await User.findOne({ name });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const hashedPassword = await bcryptjs.hash(password, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    return res.status(200).json({ message: "Password changed successfully" });
+  } catch (err) {
+    console.error("Change Password Error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
 
 export const google = async (req, res, next) => {
   const { email } = req.body;

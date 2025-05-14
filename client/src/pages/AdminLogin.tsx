@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,22 +20,25 @@ const AdminLogin = () => {
   const { googleLogin } = useAuthStore();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation() as { state?: { from?: { pathname?: string } } };
+
+  const from = location.state?.from?.pathname || '/admin'; // Default to /admin
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     try {
       const user = await login(email, password);
-  
+
       toast({
         title: "Login Successful",
         description: "Welcome to Tadegg Admin Dashboard",
         variant: "default",
       });
-  
+
       if (!user.isVerified) {
-        navigate('/verify-email'); 
+        navigate('/verify-email');
       } else {
-        navigate('/admin'); 
+        navigate(from, { replace: true }); // Redirect to original route
       }
     } catch (err) {
       toast({
@@ -45,8 +48,6 @@ const AdminLogin = () => {
       });
     }
   };
-  
-  
 
   const handleGoogleLogin = async () => {
     try {
@@ -56,7 +57,7 @@ const AdminLogin = () => {
         description: "Welcome to Tadegg Admin Dashboard",
         variant: "default",
       });
-      navigate('/admin');
+      navigate(from);
     } catch (err) {
       toast({
         title: "Login Failed",

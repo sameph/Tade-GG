@@ -9,7 +9,9 @@ import {
   checkAuth,
   getAllUsers,
   getAdminUsers,
-  inviteAdmin
+  inviteAdmin,
+  resendVerificationToken,
+  changePassword
 } from "../controllers/auth.controller.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 import { ownerOnly } from "../middleware/ownerOnly.js";
@@ -26,7 +28,9 @@ router.post("/logout", logout);
 
 router.post("/users/invite-admin", verifyToken, ownerOnly, inviteAdmin);
 router.post("/verify-email", verifyEmail);
+router.post("/resend-verification", resendVerificationToken);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
+router.post("/change-password", changePassword);
 
 export default router;

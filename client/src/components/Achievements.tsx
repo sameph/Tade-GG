@@ -69,15 +69,22 @@ const AchievementsSection = () => {
 
   useEffect(() => {
     if (!emblaApi) return;
-
+  
     const onSelect = () => {
       setActiveIndex(emblaApi.selectedScrollSnap());
       setProgress(0);
     };
-
+  
     emblaApi.on('select', onSelect);
-    return () => emblaApi.off('select', onSelect);
+  
+    // Call once on mount to initialize activeIndex and progress
+    onSelect();
+  
+    return () => {
+      emblaApi.off('select', onSelect);
+    };
   }, [emblaApi]);
+  
 
   const handleSlideClick = useCallback((index: number) => {
     emblaApi?.scrollTo(index);

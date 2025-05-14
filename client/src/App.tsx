@@ -3,7 +3,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 import Index from "./pages/Index";
 import Blog from "./pages/Blog";
@@ -14,6 +20,9 @@ import AdminLogin from "./pages/AdminLogin";
 import BlogPost from "./pages/BlogPost";
 import { useAuthStore } from "./store/authStore";
 import VerifyEmail from "./pages/verify-email";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Account from "./pages/Account";
 
 const queryClient = new QueryClient();
 
@@ -22,7 +31,6 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // This simulates the app loading process
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 2000);
@@ -33,37 +41,13 @@ const App = () => {
     checkAuth();
   }, [checkAuth]);
 
-  // protect routes that require authentication
-  const ProtectedRoute = ({ children }) => {
-    const { isAuthenticated, user } = useAuthStore();
-
-    if (!isAuthenticated) {
-      return <Navigate to="/login" replace />;
-    }
-
-    if (!user.isVerified) {
-    	return <Navigate to='/verify-email' replace />;
-    }
-
-    return children;
-  };
-
-  // redirect authenticated users to the home page
-  const RedirectAuthenticatedUser = ({ children }) => {
-    const { isAuthenticated, user } = useAuthStore();
-
-    if (isAuthenticated && user) {
-      // (isAuthenticated && user.isVerified)
-      return <Navigate to="/admin" replace />;
-    }
-
-    return children;
-  };
+  if (isCheckingAuth || isLoading) {
+    return <Preloader />;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {isLoading && <Preloader />}
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -72,25 +56,28 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route
+              path="/verify-email"
+              element={
+                user?.email ? (
+                  <VerifyEmail email={user.email} />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+            <Route
+              path="/profile"
+              element={isAuthenticated ? <Account /> : <Navigate to="/login" replace />}
+            />
             <Route
               path="/admin"
-              element={
-                <ProtectedRoute>
-                  <Admin />
-                </ProtectedRoute>
-              }
+              element={isAuthenticated ? <Admin /> : <Navigate to="/login" replace />}
             />
             <Route
               path="/login"
-              element={
-                <RedirectAuthenticatedUser>
-                  <AdminLogin />
-                </RedirectAuthenticatedUser>
-              }
+              element={isAuthenticated ? <Navigate to="/admin" replace /> : <AdminLogin />}
             />
-
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
@@ -98,5 +85,6 @@ const App = () => {
     </QueryClientProvider>
   );
 };
+
 
 export default App;

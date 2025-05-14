@@ -1,169 +1,177 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from '@/components/ui/input-otp';
-import { useAuthStore } from '@/store/authStore';
+import React, { useRef, useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { ShieldCheck, Clock } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
-const VerifyEmail = () => {
-  const [code, setCode] = useState('');
-  const [email, setEmail] = useState('');
-  const [countdown, setCountdown] = useState(60);
-  const [isResending, setIsResending] = useState(false);
+export default function OtpInputPage({ email }) {
+  const {
+    verifyEmail,
+    resendVerificationToken,
+    isLoading,
+    error,
+    message,
+  } = useAuthStore();
+  const [otp, setOtp] = useState(Array(6).fill(""));
+  const [cooldown, setCooldown] = useState(0);
+  const inputsRef = useRef([]);
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const verifyEmail = useAuthStore((state) => state.verifyEmail); // Zustand action
-  const setIsLoading = useAuthStore((state) => state.isLoading); // Zustand loading state
-  const isLoading = useAuthStore((state) => state.isLoading); // Zustand loading state
 
   useEffect(() => {
-    const savedEmail = sessionStorage.getItem('resetEmail');
-    if (!savedEmail) {
-      navigate('/login');
-      toast({
-        title: 'Error',
-        description: 'Please login or signup again.',
-        variant: 'destructive',
-      });
-      return;
+    let timer;
+    if (cooldown > 0) {
+      timer = setInterval(() => setCooldown((prev) => prev - 1), 1000);
     }
-    setEmail(savedEmail);
-    startCountdown();
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [navigate, toast]);
+  const handleChange = (e, index) => {
+    const val = e.target.value;
+    if (!/^\d?$/.test(val)) return;
 
-  const startCountdown = () => {
-    setCountdown(60);
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1 && intervalRef.current) clearInterval(intervalRef.current);
-        return prev - 1;
-      });
-    }, 1000);
+    const newOtp = [...otp];
+    newOtp[index] = val;
+    setOtp(newOtp);
+
+    if (val && index < 5) {
+      inputsRef.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Backspace") {
+      if (otp[index]) {
+        const newOtp = [...otp];
+        newOtp[index] = "";
+        setOtp(newOtp);
+      } else if (index > 0) {
+        inputsRef.current[index - 1]?.focus();
+      }
+    } else if (e.key === "ArrowLeft" && index > 0) {
+      inputsRef.current[index - 1]?.focus();
+    } else if (e.key === "ArrowRight" && index < 5) {
+      inputsRef.current[index + 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e) => {
+    const pasted = e.clipboardData.getData("text").slice(0, 6).split("");
+    if (!/^\d{6}$/.test(pasted.join(""))) return;
+
+    setOtp(pasted);
+    pasted.forEach((char, idx) => {
+      if (inputsRef.current[idx]) {
+        inputsRef.current[idx].value = char;
+      }
+    });
+    inputsRef.current[Math.min(5, pasted.length - 1)]?.focus();
   };
 
   const handleVerify = async () => {
+    const code = otp.join("");
+    if (code.length !== 6) {
+      toast.warn("Please enter the full 6-digit code!", {
+        style: {
+          backgroundColor: "#fff3cd",
+          color: "#856404",
+        },
+      });
+      return;
+    }
+
     try {
       await verifyEmail(code);
-      toast({
-        title: 'Success',
-        description: 'Your email has been verified!',
+      toast.success("✅ Email verified successfully!", {
+        style: {
+          backgroundColor: "#d1e7dd",
+          color: "#0f5132",
+        },
       });
-      setTimeout(() => navigate('/admin'), 1500);
-    } catch (err) {
-      toast({
-        title: 'Verification Failed',
-        description: 'Invalid or expired code.',
-        variant: 'destructive',
+      setTimeout(() => navigate("/profile"), 1500);
+    } catch {
+      toast.error("❌ Invalid or expired verification code", {
+        style: {
+          backgroundColor: "#f8d7da",
+          color: "#842029",
+        },
       });
     }
   };
 
-  const handleResendCode = () => {
-    setIsResending(true);
-    // You would call your resend API here
-    setTimeout(() => {
-      toast({
-        title: 'Code Sent',
-        description: `A new code was sent to ${maskEmail(email)}.`,
-      });
-      startCountdown();
-      setIsResending(false);
-    }, 1500);
-  };
-
-  const maskEmail = (email: string) => {
-    const [user, domain] = email.split('@');
-    return `${user[0]}***${user[user.length - 1]}@${domain}`;
+  const handleResend = async () => {
+    if (!email || cooldown > 0) return;
+    try {
+      await resendVerificationToken(email);
+      setCooldown(60);
+    } catch (_) {}
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#3D550C]/10 to-[#98042D]/10 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <Card className="border-none shadow-2xl rounded-2xl overflow-hidden">
-          <CardHeader className="bg-[#3D550C] text-white text-center py-6">
-            <img
-              src="https://images.unsplash.com/photo-1462917882517-e150004895fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80"
-              alt="Tadegg Logo"
-              className="mx-auto mb-4 w-20 h-20 rounded-full border-4 border-white object-cover"
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-100 to-green-300 p-4">
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="bg-white shadow-2xl rounded-2xl px-8 py-10 max-w-md w-full text-center"
+      >
+        <div className="flex justify-center mb-4">
+          <ShieldCheck className="text-green-600 w-10 h-10" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Verify Email</h2>
+        <p className="text-gray-600 mb-4">
+          Enter the 6-digit code sent to <strong>{email}</strong>
+        </p>
+
+        <form
+          className="flex gap-2 justify-center mb-4"
+          onPaste={handlePaste}
+          onSubmit={(e) => e.preventDefault()}
+        >
+          {otp.map((digit, i) => (
+            <input
+              key={i}
+              ref={(el) => (inputsRef.current[i] = el)}
+              type="text"
+              inputMode="numeric"
+              pattern="\d*"
+              maxLength={1}
+              value={digit}
+              onChange={(e) => handleChange(e, i)}
+              onKeyDown={(e) => handleKeyDown(e, i)}
+              className="w-12 h-14 text-center text-xl rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
             />
-            <CardTitle className="text-2xl font-bold">Verify Your Email</CardTitle>
-            <CardDescription className="text-white/80 mt-2">
-              We sent a 6-digit code to <strong>{maskEmail(email)}</strong>.
-            </CardDescription>
-          </CardHeader>
+          ))}
+        </form>
 
-          <CardContent className="py-6 space-y-6">
-            <div className="flex justify-center">
-              <InputOTP value={code} onChange={setCode} maxLength={6} autoFocus>
-                <InputOTPGroup>
-                  {[...Array(6)].map((_, idx) => (
-                    <InputOTPSlot
-                      key={idx}
-                      index={idx}
-                      className="rounded-lg border border-gray-300 w-12 h-12 text-xl font-semibold focus:outline-none focus:ring-2 focus:ring-[#3D550C]"
-                    />
-                  ))}
-                </InputOTPGroup>
-              </InputOTP>
-            </div>
+        {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+        {message && <p className="text-green-600 text-sm mb-2">{message}</p>}
 
-            <div className="text-center text-sm text-gray-600">
-              {countdown > 0 ? (
-                <p>
-                  Resend code in <span className="font-medium">{countdown}s</span>
-                </p>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleResendCode}
-                  disabled={isResending}
-                  className="text-[#98042D] hover:underline transition"
-                >
-                  {isResending ? 'Resending...' : 'Resend Code'}
-                </button>
-              )}
-            </div>
-          </CardContent>
+        <button
+          onClick={handleVerify}
+          disabled={isLoading}
+          className="w-full bg-green-600 text-white px-6 py-2 mt-2 rounded-full font-semibold hover:bg-green-700 transition-all"
+        >
+          {isLoading ? "Verifying..." : "Verify"}
+        </button>
 
-          <CardFooter className="flex flex-col gap-3 px-6 pb-6">
-            <Button
-              className="w-full bg-[#3D550C] hover:bg-[#2C400A] transition"
-              disabled={code.length !== 6 || isLoading}
-              onClick={handleVerify}
-            >
-              {isLoading ? 'Verifying...' : 'Verify Code'}
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => navigate('/admin')}
-            >
-              Back to Login
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
+        <div className="mt-4 text-sm text-gray-600 flex items-center justify-between">
+          <span>Didn't get the code?</span>
+          <button
+            onClick={handleResend}
+            disabled={cooldown > 0}
+            className="text-green-600 hover:underline disabled:text-gray-400 disabled:cursor-not-allowed"
+          >
+            {cooldown > 0 ? (
+              <span className="flex items-center gap-1">
+                <Clock size={16} /> {cooldown}s
+              </span>
+            ) : (
+              "Resend"
+            )}
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
-};
-
-export default VerifyEmail;
+}
