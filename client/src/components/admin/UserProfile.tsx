@@ -9,10 +9,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/store/authStore";
+import { useNavigate } from "react-router-dom";
 
 export const UserProfile = () => {
   const { user, logout } = useAuthStore();
-  
+  const navigate = useNavigate();
+
   if (!user) return null;
 
   return (
@@ -28,7 +30,10 @@ export const UserProfile = () => {
       <DropdownMenuContent className="w-56" align="end">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="flex items-center gap-2">
+        <DropdownMenuItem
+          className="flex items-center gap-2"
+          onClick={() => navigate("/profile")}
+        >
           <User className="w-4 h-4" />
           <span>Profile</span>
         </DropdownMenuItem>

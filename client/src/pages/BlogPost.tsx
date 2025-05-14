@@ -13,8 +13,17 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import ScrollReveal from "@/components/ScrollReveal";
 import Recommended from "@/components/blog/recommended";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
+const toastOptions = {
+  position: "top-center" as const,
+  autoClose: 3000,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+  theme: "colored" as const,
+};
 // Type definition for BlogPost based on your Mongoose schema
 interface BlogPost {
   slug: string;
@@ -93,7 +102,7 @@ const BlogPost = () => {
       } catch (err) {
         console.error("Error fetching post:", err);
         setError("Failed to load post. Please try again later.");
-        toast.error("Failed to load post");
+        toast.error("Failed to load post", toastOptions);
       } finally {
         setIsLoading(false);
       }

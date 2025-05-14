@@ -5,13 +5,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { FeaturedImageUploader } from "./FeaturedImageUploader";
 import { PostSettings } from "./PostSettings";
 import PostHeader from "./PostHeader";
-import { createBlogPost } from "./utils/createPosts";
+// import { createBlogPost } from "./utils/createPosts";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { upload } from "@imagekit/react";
-import { useAuthStore } from "@/store/authStore";
+// import { useAuthStore } from "@/store/authStore";
+import {toast} from 'react-toastify';
+
+const toastOptions = {
+  position: "top-center" as const,
+  autoClose: 3000,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+  theme: "colored" as const,
+};
 
 export interface BlogPost {
   _id?: string;
@@ -52,9 +62,8 @@ const BlogPostEditor: React.FC<BlogPostEditorProps> = ({
   onPublish,
   isEditing = false,
 }) => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const { user } = useAuthStore();
+  // const navigate = useNavigate();
+  // const { user } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -112,11 +121,8 @@ const BlogPostEditor: React.FC<BlogPostEditorProps> = ({
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Maximum size is 2MB.",
-        variant: "destructive",
-      });
+      toast.error( "Maximum size is 2MB.",
+        toastOptions);
       return;
     }
 

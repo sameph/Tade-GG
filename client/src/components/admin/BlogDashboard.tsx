@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { BlogPost } from "@/types/blog";
 import BlogPostCard from "./BlogPostCard";
 import BlogPostEditor from "./BlogPostEditor";
@@ -23,13 +22,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Coffee } from "lucide-react";
 import AdminSettings from "./AdminSetting";
 import { UserProfile } from "./UserProfile";
+import { toast } from "react-toastify";
 
-
-
+const toastOptions = {
+  position: "top-center" as const,
+  autoClose: 3000,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+  theme: "colored" as const,
+};
 const POSTS_PER_PAGE = 6;
 
 const BlogDashboard = () => {
-  const { toast } = useToast();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,11 +77,8 @@ const BlogDashboard = () => {
       setError(
         err instanceof Error ? err.message : "An unknown error occurred"
       );
-      toast({
-        title: "Error",
-        description: "Failed to load blog posts",
-        variant: "destructive",
-      });
+      toast.error( "Failed to load blog posts", toastOptions
+       );
     } finally {
       setLoading(false);
     }
@@ -134,21 +137,16 @@ const BlogDashboard = () => {
           )
         : [data.post, ...prevPosts]
     );
-    toast({
-      title: activePost ? "Post Updated" : "Post Created",
-      description: `"${data.post.title}" has been ${
+    toast.success( `"${data.post.title}" has been ${
         activePost ? "updated" : "created"
-      }.`,
-    });
+      }.`, toastOptions
+    );
 
     setIsEditing(false);
     setActivePost(null);
   } catch (err) {
-    toast({
-      title: "Error",
-      description: err instanceof Error ? err.message : "Failed to save post",
-      variant: "destructive",
-    });
+    toast.error( err instanceof Error ? err.message : "Failed to save post", toastOptions
+      );
   }
 };
 
@@ -170,20 +168,15 @@ const handlePublishPost = async () => {
       )
     );
 
-    toast({
-      title: "Post Published",
-      description: `"${data.post.title}" is now live!`,
-    });
+    toast.success( `"${data.post.title}" is now live!`, toastOptions
+    );
 
     setIsEditing(false);
     setActivePost(null);
   } catch (err) {
-    toast({
-      title: "Error",
-      description:
+    toast.error(
         err instanceof Error ? err.message : "Failed to publish post",
-      variant: "destructive",
-    });
+      toastOptions);
   }
 };
 
@@ -214,17 +207,12 @@ const handlePublishPost = async () => {
 
       setPosts((prev) => prev.filter((p) => p._id !== selectedPostId));
 
-      toast({
-        title: "Post Deleted",
-        description: `"${post.title}" has been removed.`,
-      });
+      toast.success(`"${post.title}" has been removed.`,
+        toastOptions);
     } catch (err) {
-      toast({
-        title: "Error",
-        description:
+      toast.error(
           err instanceof Error ? err.message : "Failed to delete the post",
-        variant: "destructive",
-      });
+        );
     } finally {
       setIsDialogOpen(false);
       setSelectedPostId(null);

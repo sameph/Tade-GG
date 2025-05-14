@@ -2,8 +2,18 @@ import { Coffee } from "lucide-react";
 import ScrollReveal from "../ScrollReveal";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "react-toastify";
+
+const toastOptions = {
+  position: "top-center" as const,
+  autoClose: 3000,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+  theme: "colored" as const,
+};
 
 interface RecommendedPost {
   slug: string;
@@ -15,6 +25,7 @@ interface RecommendedPost {
   };
   createdAt: string;
 }
+
 
 interface RecommendedProps {
   currentPostSlug: string;
@@ -40,7 +51,7 @@ const Recommended = ({ currentPostSlug }: RecommendedProps) => {
         }
       } catch (err) {
         console.error("Error fetching recommended posts:", err);
-        toast.error("Failed to load recommendations");
+        toast.error("Failed to load recommendations", toastOptions);
       } finally {
         setIsLoading(false);
       }

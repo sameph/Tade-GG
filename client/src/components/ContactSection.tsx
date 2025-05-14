@@ -1,13 +1,21 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
 import { Mail, Phone, MapPin, Coffee } from "lucide-react";
+import { toast } from "react-toastify";
+
+const toastOptions = {
+  position: "top-center" as const,
+  autoClose: 3000,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+  theme: "colored" as const,
+};
 
 const ContactSection = () => {
-  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -15,20 +23,19 @@ const ContactSection = () => {
     message: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Here you would normally send the form data to a server
     console.log("Form submitted:", formData);
-    
-    toast({
-      title: "Message Sent!",
-      description: "Thank you for contacting us. We'll be in touch soon.",
-    });
+
+    toast("Thank you for contacting us. We'll be in touch soon.", toastOptions);
 
     // Reset form
     setFormData({
@@ -47,7 +54,8 @@ const ContactSection = () => {
             <div className="mb-8">
               <h2 className="section-title">Get In Touch</h2>
               <p className="section-subtitle">
-                Interested in our premium Ethiopian coffee offerings? Contact us today to discuss how Tadegg can meet your coffee sourcing needs.
+                Interested in our premium Ethiopian coffee offerings? Contact us
+                today to discuss how Tadegg can meet your coffee sourcing needs.
               </p>
             </div>
 
@@ -57,7 +65,9 @@ const ContactSection = () => {
                   <Mail className="w-5 h-5 text-tadegg-burgundy" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-tadegg-green mb-1">Email Us</h3>
+                  <h3 className="text-lg font-medium text-tadegg-green mb-1">
+                    Email Us
+                  </h3>
                   <p className="text-tadegg-brown/80">info@tadegg.com</p>
                   <p className="text-tadegg-brown/80">sales@tadegg.com</p>
                 </div>
@@ -68,9 +78,13 @@ const ContactSection = () => {
                   <Phone className="w-5 h-5 text-tadegg-burgundy" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-tadegg-green mb-1">Call Us</h3>
+                  <h3 className="text-lg font-medium text-tadegg-green mb-1">
+                    Call Us
+                  </h3>
                   <p className="text-tadegg-brown/80">+251 111 234 567</p>
-                  <p className="text-tadegg-brown/80">+251 911 123 456 (Mobile)</p>
+                  <p className="text-tadegg-brown/80">
+                    +251 911 123 456 (Mobile)
+                  </p>
                 </div>
               </div>
 
@@ -79,7 +93,9 @@ const ContactSection = () => {
                   <MapPin className="w-5 h-5 text-tadegg-burgundy" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-tadegg-green mb-1">Visit Us</h3>
+                  <h3 className="text-lg font-medium text-tadegg-green mb-1">
+                    Visit Us
+                  </h3>
                   <p className="text-tadegg-brown/80">Bole Road, Addis Ababa</p>
                   <p className="text-tadegg-brown/80">Ethiopia, East Africa</p>
                 </div>
@@ -98,11 +114,16 @@ const ContactSection = () => {
 
           <div>
             <div className="bg-tadegg-cream/30 p-6 md:p-8 rounded-lg">
-              <h3 className="text-2xl font-serif text-tadegg-green mb-6">Send Us a Message</h3>
-              
+              <h3 className="text-2xl font-serif text-tadegg-green mb-6">
+                Send Us a Message
+              </h3>
+
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-tadegg-brown mb-1">
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-tadegg-brown mb-1"
+                  >
                     Your Name
                   </label>
                   <Input
@@ -115,9 +136,12 @@ const ContactSection = () => {
                     className="bg-white border-tadegg-brown/20 focus-visible:ring-tadegg-green"
                   />
                 </div>
-                
+
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-tadegg-brown mb-1">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-tadegg-brown mb-1"
+                  >
                     Email Address
                   </label>
                   <Input
@@ -131,9 +155,12 @@ const ContactSection = () => {
                     className="bg-white border-tadegg-brown/20 focus-visible:ring-tadegg-green"
                   />
                 </div>
-                
+
                 <div>
-                  <label htmlFor="company" className="block text-sm font-medium text-tadegg-brown mb-1">
+                  <label
+                    htmlFor="company"
+                    className="block text-sm font-medium text-tadegg-brown mb-1"
+                  >
                     Company
                   </label>
                   <Input
@@ -145,9 +172,12 @@ const ContactSection = () => {
                     className="bg-white border-tadegg-brown/20 focus-visible:ring-tadegg-green"
                   />
                 </div>
-                
+
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-tadegg-brown mb-1">
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium text-tadegg-brown mb-1"
+                  >
                     Message
                   </label>
                   <Textarea
@@ -160,9 +190,9 @@ const ContactSection = () => {
                     className="bg-white border-tadegg-brown/20 focus-visible:ring-tadegg-green min-h-[120px]"
                   />
                 </div>
-                
-                <Button 
-                  type="submit" 
+
+                <Button
+                  type="submit"
                   className="w-full bg-tadegg-burgundy hover:bg-tadegg-burgundy/90 text-white"
                 >
                   Send Message
