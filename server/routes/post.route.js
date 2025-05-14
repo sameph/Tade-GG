@@ -17,10 +17,10 @@ import { BlogPost } from "../models/blog.model.js";
 
 const router = express.Router();
 
+router.get("/", getAllPosts);
+router.post("/create", verifyToken, createPost);
 router.get("/upload-auth", uploadAuth)
 // Get all posts (optionally filtered or paginated)
-router.post("/create", verifyToken, createPost);
-router.get("/", getAllPosts);
 
 // /routes/blog.js
 router.get("/latest", async (req, res) => {
@@ -36,9 +36,9 @@ router.get("/latest", async (req, res) => {
 
 // Get recommended posts (exclude current post)
 router.get("/recommended", getRecommendedPosts);
+router.put("/:id/publish", verifyToken, publishPost);
 router.delete("/:id", deleteBlogPost);
 router.put("/:slug", verifyToken, updatePost);
-router.put("/:id/publish", verifyToken, publishPost);
 
 // Get only published posts
 // router.get("/published", getPublishedPosts);
