@@ -2,10 +2,13 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Coffee, ArrowDown } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoaded(true);
@@ -14,6 +17,20 @@ const Hero = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const scrollToSection = (id: string) => {
+    setIsMobileMenuOpen(false);
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 80;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+    }
+  };
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-tadegg-green via-tadegg-green to-[#2e1105] pt-24 pb-12 md:py-0 scroll-mt-24">
       {/* Interactive coffee bean illustrations */}
@@ -83,15 +100,7 @@ const Hero = () => {
                   : "opacity-0 translate-y-10"
               )}
             >
-              <Button
-                size="lg"
-                className="bg-tadegg-burgundy hover:bg-tadegg-burgundy/90 text-white font-semibold text-base sm:text-lg group shine"
-              >
-                <span>Explore Our Coffees</span>
-                <span className="ml-2 transform transition-transform group-hover:translate-x-1">
-                  →
-                </span>
-              </Button>
+              <Link to="/blog">
               <Button
                 size="lg"
                 variant="outline"
@@ -102,6 +111,17 @@ const Hero = () => {
                   <span className="opacity-100 transform transition-transform group-hover:translate-x-1 text-tadegg-green group-hover:text-tadegg-burgundy">
                     →
                   </span>
+                </span>
+              </Button>
+              </Link>
+              <Button
+                onClick={() => scrollToSection("contact")}
+                size="lg"
+                className="bg-tadegg-burgundy hover:bg-tadegg-burgundy/90 text-white font-semibold text-base sm:text-lg group shine"
+              >
+                <span>Contact Us</span>
+                <span className="ml-2 transform transition-transform group-hover:translate-x-1">
+                  →
                 </span>
               </Button>
             </div>

@@ -1,4 +1,3 @@
-
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import AboutSection from "@/components/AboutSection";
@@ -15,6 +14,8 @@ import ScrollReveal from "@/components/ScrollReveal";
 import { ArrowUp } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import AchievementsSection from "@/components/Achievements";
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 const Index = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -25,6 +26,14 @@ const Index = () => {
   const parallaxLayersRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
+    // Initialize AOS
+    AOS.init({
+      duration: 800,
+      once: false,
+      easing: 'ease-in-out-quad',
+      mirror: true
+    });
+
     const handleScroll = () => {
       // Update scroll position for parallax effects
       setScrollY(window.scrollY);
@@ -61,102 +70,133 @@ const Index = () => {
       <Navbar />
       <Hero />
       
-      <ScrollReveal>
+      {/* Enhanced ScrollReveal with AOS */}
+      <div data-aos="fade-up" data-aos-delay="100">
         <AboutSection />
-      </ScrollReveal>
+      </div>
       
-      <ScrollReveal direction="left" delay={200}>
+      <div data-aos="fade-left" data-aos-delay="150">
         <WhyChooseUs />
-      </ScrollReveal>
+      </div>
       
-      <ScrollReveal direction="right" delay={200}>
+      <div data-aos="fade-right" data-aos-delay="150">
         <Specialties />
-      </ScrollReveal>
+      </div>
       
-      <ScrollReveal>
+      <div data-aos="zoom-in" data-aos-delay="100">
         <ProcessSection />
-      </ScrollReveal>
+      </div>
       
-      <ScrollReveal direction="fade" delay={300} threshold={0.2}>
-        <div className="py-16 bg-gradient-to-r from-tadegg-cream to-white relative overflow-hidden">
-          {/* Parallax coffee bean shapes */}
+      {/* Enhanced Parallax Section */}
+      <div 
+        className="py-16 bg-gradient-to-r from-tadegg-cream to-white relative overflow-hidden"
+        data-aos="fade-in"
+        data-aos-delay="200"
+      >
+        {/* Parallax coffee bean shapes */}
+        <div 
+          className="absolute inset-0 pointer-events-none"
+          ref={parallaxLayersRef}
+          style={{ perspective: '1000px' }}
+        >
           <div 
-            className="absolute inset-0 pointer-events-none"
-            ref={parallaxLayersRef}
-            style={{ perspective: '1000px' }}
-          >
-            <div 
-              className="float-bean absolute top-20 left-[10%] w-20 h-36 rounded-full border-4 border-tadegg-brown/10 rotate-45"
-              style={{ transform: `translateY(${scrollY * 0.05}px) rotate(45deg)` }}
-            ></div>
-            <div 
-              className="float-bean absolute bottom-10 right-[15%] w-16 h-28 rounded-full border-4 border-tadegg-brown/10 rotate-12 animation-delay-300"
-              style={{ transform: `translateY(${scrollY * -0.03}px) rotate(12deg)` }}
-            ></div>
-            <div 
-              className="float-bean absolute top-40 right-[20%] w-12 h-20 rounded-full border-2 border-tadegg-burgundy/10 -rotate-12 animation-delay-600"
-              style={{ transform: `translateY(${scrollY * 0.07}px) rotate(-12deg)` }}
-            ></div>
-            
-            {/* Additional floating elements for enhanced parallax */}
-            <div 
-              className="absolute top-[30%] left-[30%] w-8 h-8 rounded-full bg-tadegg-burgundy/5"
-              style={{ transform: `translateY(${scrollY * -0.04}px) translateX(${scrollY * 0.02}px)` }}
-            ></div>
-            <div 
-              className="absolute bottom-[20%] left-[20%] w-10 h-10 rounded-full bg-tadegg-green/5"
-              style={{ transform: `translateY(${scrollY * 0.06}px) translateX(${scrollY * -0.01}px)` }}
-            ></div>
-          </div>
+            className="float-bean absolute top-20 left-[10%] w-20 h-36 rounded-full border-4 border-tadegg-brown/10 rotate-45"
+            style={{ transform: `translateY(${scrollY * 0.05}px) rotate(45deg)` }}
+            data-aos="zoom-in"
+            data-aos-delay="300"
+          ></div>
+          <div 
+            className="float-bean absolute bottom-10 right-[15%] w-16 h-28 rounded-full border-4 border-tadegg-brown/10 rotate-12 animation-delay-300"
+            style={{ transform: `translateY(${scrollY * -0.03}px) rotate(12deg)` }}
+            data-aos="zoom-in"
+            data-aos-delay="400"
+          ></div>
+          <div 
+            className="float-bean absolute top-40 right-[20%] w-12 h-20 rounded-full border-2 border-tadegg-burgundy/10 -rotate-12 animation-delay-600"
+            style={{ transform: `translateY(${scrollY * 0.07}px) rotate(-12deg)` }}
+            data-aos="zoom-in"
+            data-aos-delay="500"
+          ></div>
           
-          <div className="container mx-auto text-center relative z-10">
-            <h2 className="text-3xl md:text-4xl font-serif font-semibold mb-6 text-tadegg-burgundy animate-pulse">
-              "The finest Ethiopian coffee, from our highlands to your cup"
-            </h2>
-            <p className="text-tadegg-brown/80 text-lg max-w-2xl mx-auto">
-              Experience the unparalleled quality and rich heritage of Ethiopian coffee through Tadegg's premium exports.
-            </p>
-          </div>
+          {/* Additional floating elements for enhanced parallax */}
+          <div 
+            className="absolute top-[30%] left-[30%] w-8 h-8 rounded-full bg-tadegg-burgundy/5"
+            style={{ transform: `translateY(${scrollY * -0.04}px) translateX(${scrollY * 0.02}px)` }}
+            data-aos="fade-in"
+            data-aos-delay="600"
+          ></div>
+          <div 
+            className="absolute bottom-[20%] left-[20%] w-10 h-10 rounded-full bg-tadegg-green/5"
+            style={{ transform: `translateY(${scrollY * 0.06}px) translateX(${scrollY * -0.01}px)` }}
+            data-aos="fade-in"
+            data-aos-delay="700"
+          ></div>
         </div>
-      </ScrollReveal>
+        
+        <div className="container mx-auto text-center relative z-10">
+          <h2 
+            className="text-3xl md:text-4xl font-serif font-semibold mb-6 text-tadegg-burgundy animate-pulse"
+            data-aos="zoom-in"
+            data-aos-delay="200"
+          >
+            "The finest Ethiopian coffee, from our highlands to your cup"
+          </h2>
+          <p 
+            className="text-tadegg-brown/80 text-lg max-w-2xl mx-auto"
+            data-aos="fade-up"
+            data-aos-delay="300"
+          >
+            Experience the unparalleled quality and rich heritage of Ethiopian coffee through Tadegg's premium exports.
+          </p>
+        </div>
+      </div>
       
-      <ScrollReveal>
+      <div data-aos="fade-in" data-aos-delay="100">
         <TestimonialSection />
-      </ScrollReveal>
+      </div>
       
-      <ScrollReveal direction="bottom" delay={400}>
+      <div data-aos="fade-in" data-aos-delay="150">
         <Gallery />
-      </ScrollReveal>
+      </div>
 
-      <ScrollReveal direction="bottom" delay={600}>
+      <div data-aos="zoom-in" data-aos-delay="100">
         <AchievementsSection />
-      </ScrollReveal>
+      </div>
       
-      <ScrollReveal direction="left" delay={200}>
+      <div data-aos="fade-in" data-aos-delay="150">
         <BlogPreview />
-      </ScrollReveal>
+      </div>
       
-      <ScrollReveal>
+      <div data-aos="fade-up" data-aos-delay="100">
         <ContactSection />
-      </ScrollReveal>
+      </div>
       
-      <ScrollReveal>
+      <div data-aos="fade-in" data-aos-delay="150">
         <MapSection />
-      </ScrollReveal>
+      </div>
       
       <Footer />
       
-      {/* Scroll to top button with enhanced animation */}
+      {/* Enhanced Scroll to top button with 3D effect */}
       <button 
-        className={`fixed bottom-6 right-6 w-12 h-12 rounded-full bg-tadegg-burgundy text-white flex items-center justify-center shadow-lg transition-all z-50 hover:bg-tadegg-green hover:shadow-xl ${showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
+        className={`fixed bottom-6 right-6 w-12 h-12 rounded-full bg-tadegg-burgundy text-white flex items-center justify-center shadow-lg transition-all z-50 hover:bg-tadegg-green hover:shadow-xl transform hover:scale-110 hover:-translate-y-1 ${
+          showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
+        }`}
         onClick={scrollToTop}
         aria-label="Scroll to top"
+        data-aos="zoom-in"
+        data-aos-delay="1000"
+        data-aos-anchor-placement="top-center"
       >
         <ArrowUp className="animate-bounce-subtle" />
       </button>
       
-      {/* Page transition overlay */}
-      <div className={`fixed inset-0 bg-tadegg-burgundy z-[100] transition-transform duration-1000 ease-in-out ${isVisible ? 'translate-y-[-100%]' : 'translate-y-0'}`}></div>
+      {/* Page transition overlay with gradient */}
+      <div 
+        className={`fixed inset-0 bg-gradient-to-b from-tadegg-burgundy to-tadegg-green z-[100] transition-transform duration-1000 ease-in-out ${
+          isVisible ? 'translate-y-[-100%]' : 'translate-y-0'
+        }`}
+      ></div>
       
       <style>
         {`
@@ -183,21 +223,52 @@ const Index = () => {
           animation-delay: 0.6s;
         }
         
+        /* Enhanced 3D hover effect */
+        [data-aos] {
+          transition-property: transform, opacity;
+        }
+        
         .hover-3d {
-          transition: transform 0.3s ease;
+          transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          transform-style: preserve-3d;
         }
         
         .hover-3d:hover {
-          transform: perspective(500px) rotateY(15deg);
+          transform: perspective(500px) rotateY(15deg) translateZ(20px);
+          box-shadow: 0 20px 30px rgba(0,0,0,0.1);
         }
         
+        /* Enhanced bounce animation */
         .animate-bounce-subtle {
           animation: bounce-subtle 1.5s infinite;
         }
         
         @keyframes bounce-subtle {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-4px); }
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-8px) scale(1.05); }
+        }
+        
+        /* Custom AOS animations */
+        [data-aos="custom-slide"] {
+          opacity: 0;
+          transform: translateX(-50px);
+          transition-property: transform, opacity;
+        }
+        
+        [data-aos="custom-slide"].aos-animate {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        
+        /* Pulse animation for featured elements */
+        @keyframes pulse-glow {
+          0% { box-shadow: 0 0 0 0 rgba(138, 79, 45, 0.4); }
+          70% { box-shadow: 0 0 0 10px rgba(138, 79, 45, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(138, 79, 45, 0); }
+        }
+        
+        .animate-pulse-glow {
+          animation: pulse-glow 2s infinite;
         }
         `}
       </style>

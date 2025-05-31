@@ -76,13 +76,7 @@ const Navbar = () => {
               Tadegg
             </span>
           </Link>
-          <Link
-            to="/admin"
-            className="absolute right-4 opacity-0 pointer-events-auto"
-            aria-label="Admin Access"
-          >
-            Admin
-          </Link>
+          
         </div>
       </nav>
     );

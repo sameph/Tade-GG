@@ -19,11 +19,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Coffee } from "lucide-react";
+import { Plus, Coffee, FileText, Images, Users } from "lucide-react";
 import AdminSettings from "./AdminSetting";
 import { UserProfile } from "./UserProfile";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import MediaGallery from "./MediaGallery";
 
 const toastOptions = {
   position: "top-center" as const,
@@ -62,9 +63,15 @@ const BlogDashboard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
   const navigate = useNavigate();
 
-  // Fetch posts
+  interface MainImage {
+  url: string;
+  alt?: string;
+  caption?: string;
+}
+
   const fetchPosts = useCallback(async () => {
     try {
       const response = await fetch("/api/blogs");
@@ -333,10 +340,33 @@ const BlogDashboard = () => {
               className="border border-gray-300 rounded-md px-3 py-2 text-sm w-[180px]"
             />
 
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-2 w-[220px]">
-                <TabsTrigger value="posts">Blog Posts</TabsTrigger>
-                <TabsTrigger value="settings">Admin Team</TabsTrigger>
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full md:w-auto"
+            >
+              <TabsList className="grid grid-cols-3 w-[400px]">
+                <TabsTrigger
+                  value="posts"
+                  className="data-[state=active]:bg-[#3D550C]/10 data-[state=active]:text-[#3D550C]"
+                >
+                  <FileText size={18} className="mr-2" />
+                  Blog Posts
+                </TabsTrigger>
+                <TabsTrigger
+                  value="media"
+                  className="data-[state=active]:bg-[#3D550C]/10 data-[state=active]:text-[#3D550C]"
+                >
+                  <Images size={18} className="mr-2" />
+                  Media
+                </TabsTrigger>
+                <TabsTrigger
+                  value="settings"
+                  className="data-[state=active]:bg-[#3D550C]/10 data-[state=active]:text-[#3D550C]"
+                >
+                  <Users size={18} className="mr-2" />
+                  Admin Team
+                </TabsTrigger>
               </TabsList>
             </Tabs>
 
@@ -412,6 +442,12 @@ const BlogDashboard = () => {
                   ))}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="media" className="mt-0">
+              <MediaGallery
+                onBack={handleBackToPosts}
+              />
             </TabsContent>
 
             <TabsContent value="settings">
