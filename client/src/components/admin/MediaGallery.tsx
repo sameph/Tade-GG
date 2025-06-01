@@ -1,6 +1,6 @@
-/* -------------------------------------------------------------------------- */
+/* -------- */
 /*  MediaGallery.tsx                                                          */
-/* -------------------------------------------------------------------------- */
+/* -------- */
 import React, { useState, useEffect, useCallback } from "react";
 import { Plus, Trash, X, Loader2, ImagePlus } from "lucide-react";
 import {
@@ -66,7 +66,7 @@ export default function MediaGallery({ onBack }: MediaGalleryProps) {
       if (!res.ok) throw new Error("Fetch failed");
       const data = await res.json();
       setImages(data.images ?? []);
-      setPage(1); // reset to first page on fetch
+      setPage(1); 
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
         toast({

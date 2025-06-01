@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import path from "path";
 import fs from "fs";
+import routeValidator from "./middleware/routeValidator.js";
 
 import { connectDB } from "./db/connectDB.js";
 import authRoutes from "./routes/auth.route.js";
@@ -20,15 +21,7 @@ const __dirname = path.resolve();
 
 // ─── Middleware ───────────────────────────────────────────────
 app.use(helmet());
-app.use(
-  "/gallery",
-  express.static("public/gallery", {
-    setHeaders: (res) => {
-      res.setHeader("Access-Control-Allow-Origin", "*"); // or specific domain
-      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
-    },
-  })
-);
+
 
 app.use(cors({
   origin: process.env.CLIENT_URL || "http://localhost:8080",
@@ -49,6 +42,9 @@ app.use("/gallery", express.static(path.join(__dirname, "public/gallery")));
 const uploadDir = path.join(__dirname, "public/gallery");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
+// ─── Route Validation ────────────────────────────────────────
+app.use(routeValidator);
+
 // ─── API Routes ───────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
 app.use("/api/blogs", blogRoutes);
@@ -68,10 +64,28 @@ if (process.env.NODE_ENV === "production") {
 
 // ─── Global Error Handler ─────────────────────────────────────
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Error:', err);
+  console.error('Stack:', err.stack);
+  console.error('Request URL:', req.originalUrl);
+  
+  // Handle path-to-regexp errors specifically
+  if (err.message.includes('Missing parameter name')) {
+    return res.status(400).json({ 
+      success: false, 
+      statusCode: 400,
+      message: 'Invalid route pattern',
+      details: 'Malformed route pattern detected. Please check your route definitions.'
+    });
+  }
+
   const statusCode = err.statusCode || 500;
   const message = err.message || "Internal Server Error";
-  res.status(statusCode).json({ success: false, statusCode, message });
+  res.status(statusCode).json({ 
+    success: false, 
+    statusCode, 
+    message,
+    details: err.stack 
+  });
 });
 
 // ─── Graceful Shutdown ────────────────────────────────────────
