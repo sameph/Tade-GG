@@ -57,8 +57,28 @@ app.get("/api/health", (req, res) => {
 // ─── Production Handling ──────────────────────────────────────
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "frontend/dist")));
-  app.get("*", (_, res) => {
-    res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+  
+  // Handle malformed routes before the catch-all
+  app.get("/*", (req, res, next) => {
+    try {
+      // Validate the route pattern
+      const routePattern = req.originalUrl.split('?')[0];
+      
+      // Check for malformed patterns
+      if (routePattern.includes('pathToRegexpError')) {
+        return res.status(404).json({
+          success: false,
+          statusCode: 404,
+          message: 'Invalid route pattern',
+          details: 'The requested route does not exist'
+        });
+      }
+      
+      // If it's a valid route, proceed with the catch-all
+      res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+    } catch (error) {
+      next(error);
+    }
   });
 }
 
@@ -68,13 +88,14 @@ app.use((err, req, res, next) => {
   console.error('Stack:', err.stack);
   console.error('Request URL:', req.originalUrl);
   
-  // Handle path-to-regexp errors specifically
-  if (err.message.includes('Missing parameter name')) {
+  // Handle Express 5 route validation errors
+  if (err.message.includes('Missing parameter name') || 
+      err.message.includes('path-to-regexp')) {
     return res.status(400).json({ 
       success: false, 
       statusCode: 400,
       message: 'Invalid route pattern',
-      details: 'Malformed route pattern detected. Please check your route definitions.'
+      details: 'The route pattern is malformed. Please ensure all parameters are properly named and follow Express 5 syntax.'
     });
   }
 
