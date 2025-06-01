@@ -50,7 +50,7 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-// ✅ Global error handler
+
 app.use((err, req, res, next) => {
   console.error("Error:", err);
   res.status(err.statusCode || 500).json({
