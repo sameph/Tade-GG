@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import { User } from "../models/user.model.js";
 
 // 🔧 MongoDB URI
-const MONGO_URI = 'mongodb+srv://sameph:tadegg@cluster0.pcjiuni.mongodb.net/tade?retryWrites=true&w=majority&appName=Cluster0'; // update this
+const MONGO_URI = process.env.MONGO_URI 
 
 // ✅ Create user function
 const createUser = async () => {
