@@ -4,7 +4,7 @@ const router = Router();
 
 router.use((req, res, next) => {
   const url = req.originalUrl || '';
-  const routePattern = url.split('?')[0]; // Remove query params
+  const routePattern = url.split('?')[0]; 
   
   
   const hasUnnamedParam = /:\w+/.test(routePattern);
