@@ -7,10 +7,7 @@ import {
   getRecommendedPosts,
   publishPost,
   updatePost,
-  uploadAuth,
-  // updatePost,
-  // deletePost,
-  // getPublishedPosts,
+  uploadAuth
 } from "../controllers/blog.controller.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 import { BlogPost } from "../models/blog.model.js";
@@ -40,18 +37,6 @@ router.put("/:id/publish", verifyToken, publishPost);
 router.delete("/:id", deleteBlogPost);
 router.put("/:slug", verifyToken, updatePost);
 
-// Get only published posts
-// router.get("/published", getPublishedPosts);
-
-// Get a single post by slug
 router.get("/:slug", getPostBySlug);
-
-// Create a new post (authenticated)
-
-// Update a post by slug (authenticated)
-// router.put("/:slug", verifyToken, updatePost);
-
-// Delete a post by slug (authenticated)
-// router.delete("/:slug", verifyToken, deletePost);
 
 export default router;

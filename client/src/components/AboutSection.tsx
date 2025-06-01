@@ -37,7 +37,7 @@ const AboutSection = () => {
             </h2>
 
             <p className="text-base sm:text-lg text-tadegg-brown/80">
-              Tadegg is a premier Ethiopian coffee exporter dedicated to bringing the world's finest arabica coffee beans to international markets. Our journey began in the misty highlands of Ethiopia, the birthplace of coffee.
+            Our coffee grows in the fertile, elevated forests of Guji — a region renowned for its rich biodiversity, heirloom varieties, and optimal climate for specialty coffee. Here, altitude, soil, and time-honored cultivation practices harmonize to produce beans of exceptional character.
             </p>
 
             {/* Mission & Vision */}

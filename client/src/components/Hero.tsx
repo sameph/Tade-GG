@@ -56,7 +56,7 @@ const Hero = () => {
                     isLoaded ? "translate-y-0" : "translate-y-full"
                   )}
                 >
-                  From Ethiopia's
+                  Taste Speciality
                 </span>
               </span>
               <span className="block overflow-hidden">
@@ -66,7 +66,7 @@ const Hero = () => {
                     isLoaded ? "translate-y-0" : "translate-y-full"
                   )}
                 >
-                  Highlands
+                  Coffee,
                 </span>
               </span>
               <span className="block overflow-hidden">
@@ -76,7 +76,7 @@ const Hero = () => {
                     isLoaded ? "translate-y-0" : "translate-y-full"
                   )}
                 >
-                  To The World
+                  Across Continents
                 </span>
               </span>
             </h1>
@@ -88,9 +88,7 @@ const Hero = () => {
                   : "opacity-0 translate-y-10"
               )}
             >
-              Premium Ethiopian coffee beans, ethically sourced and expertly
-              exported to bring the authentic taste of Ethiopian heritage to
-              global markets.
+              Founded in 2004, we began as a humble farm in the lush highlands of Guji, Ethiopia. Today, we are a globally trusted green coffee exporter known for our unwavering commitment to quality, sustainability, and transparency.
             </p>
             <div
               className={cn(

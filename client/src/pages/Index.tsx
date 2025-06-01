@@ -16,6 +16,7 @@ import { useEffect, useState, useRef } from "react";
 import AchievementsSection from "@/components/Achievements";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import CoreValues from "@/components/coreValues";
 
 const Index = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -73,6 +74,9 @@ const Index = () => {
       {/* Enhanced ScrollReveal with AOS */}
       <div data-aos="fade-up" data-aos-delay="100">
         <AboutSection />
+      </div>
+      <div data-aos="fade-up" data-aos-delay="100">
+        <CoreValues />
       </div>
       
       <div data-aos="fade-left" data-aos-delay="150">

@@ -32,7 +32,7 @@ const BlogPreview = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await fetch("/api/blogs/latest"); // <-- API endpoint for latest 3
+        const res = await fetch("/api/blogs/latest");
         const data = await res.json();
         if (data.success) {
           setPosts(data.posts);

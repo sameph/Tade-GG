@@ -14,7 +14,7 @@ const categories = [
 type GalleryImage = {
   _id: string;
   filename: string;
-  url: string; // e.g., "/gallery/img-123.jpg"
+  url: string; 
   alt: string;
   category: string;
 };
@@ -86,7 +86,7 @@ const Gallery = () => {
                   onClick={() => setSelectedImage(image._id)}
                 >
                   <img
-                    src={`${image.url}`}
+                    src={`api/gallery/${image.filename}`}
                     alt={image.alt}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />

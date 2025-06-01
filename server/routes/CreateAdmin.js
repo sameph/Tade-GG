@@ -1,24 +1,36 @@
-// scripts/createAdmin.js
 import mongoose from "mongoose";
-import bcryptjs from "bcryptjs";
-import dotenv from "dotenv";
-dotenv.config();
+import bcrypt from "bcrypt";
+import { User } from "../models/user.model.js";
 
-mongoose.connect("mongodb+srv://sameph:tadegg@cluster0.pcjiuni.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0");
+// 🔧 MongoDB URI
+const MONGO_URI = 'mongodb+srv://sameph:tadegg@cluster0.pcjiuni.mongodb.net/tade?retryWrites=true&w=majority&appName=Cluster0'; // update this
 
-const adminSchema = new mongoose.Schema({
-  email: String,
-  password: String,
-});
-const Admin = mongoose.model("Admin", adminSchema);
+// ✅ Create user function
+const createUser = async () => {
+  try {
+    await mongoose.connect(MONGO_URI);
 
-(async () => {
-  const hashedPassword = await bcryptjs.hashSync("admin123", 10); 
-  await Admin.create({
-    email: "samuelephrem07@gmail.com",
-    password: hashedPassword,
-    role: "owner",
-  });
-  console.log("Admin created");
-  mongoose.connection.close();
-})();
+    const email = "samuelephrem07@gmail.com";
+    const plainPassword = "admin123";
+    const name = "Admin User";
+    const role = "owner"; // or "admin"
+
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+    const user = await User.create({
+      email,
+      password: hashedPassword,
+      name,
+      role,
+      isVerified: true, // optional: set to true if you want to skip verification
+    });
+
+    console.log("✅ User created:", user);
+    mongoose.disconnect();
+  } catch (err) {
+    console.error("❌ Error creating user:", err);
+    mongoose.disconnect();
+  }
+};
+
+createUser();

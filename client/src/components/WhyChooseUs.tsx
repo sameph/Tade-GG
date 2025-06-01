@@ -1,31 +1,30 @@
-
 import { Check } from "lucide-react";
 
 const WhyChooseUs = () => {
   const reasons = [
     {
-      title: "Premium Quality Beans",
-      description: "We exclusively export the highest grade arabica beans, carefully selected at optimal ripeness and processed to perfection.",
+      title: "Trusted Since 2004",
+      description: "With over two decades in the coffee export industry, Tade GG has built strong relationships with global partners across Europe, North America, Asia, and the Middle East.",
     },
     {
-      title: "Direct Trade Relationships",
-      description: "Our direct partnerships with coffee farmers ensure fair compensation and sustainable farming practices.",
+      title: "Certified Excellence",
+      description: "Our coffee has received numerous awards and certifications, highlighting our dedication to consistent quality, traceability, and integrity at every level.",
     },
     {
-      title: "Authentic Ethiopian Varieties",
-      description: "Experience the legendary regional varieties like Yirgacheffe, Sidamo, Guji, and Harrar, each with distinctive flavor profiles.",
+      title: "Eco-Friendly & Ethical",
+      description: "We champion sustainability and fair labor practices, from shade-grown farms to eco-conscious processing. Every cup supports ethical sourcing and environmental care.",
     },
     {
-      title: "Sustainability Commitment",
-      description: "Our operations prioritize environmental sustainability, from shade-grown cultivation to eco-friendly processing.",
+      title: "Farm-to-Bag Traceability",
+      description: "Every bean can be traced back to its origin. From altitude and region to the farmer’s story, we provide full transparency to build trust with every customer.",
     },
     {
-      title: "Quality Assurance",
-      description: "Rigorous quality control at every step, from cherry selection to final packaging, guarantees excellence in every batch.",
+      title: "Customizable Offerings",
+      description: "Whether you are a specialty roaster or a global retailer, we tailor our offerings—bean type, roast profile, and packaging—to suit your market needs.",
     },
     {
-      title: "Customized Solutions",
-      description: "We offer tailored solutions for businesses of all sizes, from boutique roasteries to international retail chains.",
+      title: "High Elevation Grown",
+      description: "Grown at altitudes above 1,800 meters, our beans develop complex flavors and vibrant acidity, showcasing the rich diversity of Ethiopia’s coffee-growing regions.",
     },
   ];
 
@@ -46,9 +45,9 @@ const WhyChooseUs = () => {
       
       <div className="container mx-auto relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="section-title">Why Choose Tadegg</h2>
+          <h2 className="section-title">Why Choose Tade GG</h2>
           <p className="section-subtitle">
-            With decades of experience in Ethiopian coffee exportation, we offer unparalleled quality, sustainability, and service excellence to our global partners.
+            Exporting Since 2004 — Partnering with the world through quality, sustainability, and traceability.
           </p>
         </div>
 
@@ -70,7 +69,7 @@ const WhyChooseUs = () => {
             </div>
           ))}
         </div>
-        
+
         <div className="mt-16 max-w-4xl mx-auto bg-tadegg-green/10 p-6 md:p-8 rounded-lg border border-tadegg-green/20">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="rounded-full overflow-hidden w-24 h-24 md:w-32 md:h-32 flex-shrink-0">
@@ -82,14 +81,14 @@ const WhyChooseUs = () => {
             </div>
             <div>
               <h3 className="text-xl md:text-2xl font-serif text-tadegg-green mb-3">
-                Farm-to-Cup Traceability
+                Transparency You Can Taste
               </h3>
               <p className="text-tadegg-brown/80 mb-4">
-                Every batch of our coffee is fully traceable to its source farm in Ethiopia. We believe transparency builds trust and ensures quality, which is why we provide detailed information about the origin, altitude, processing methods, and farmer profiles for all our coffees.
+                From the highlands of Ethiopia to your roastery or café, every bag tells a story. Our detailed traceability system ensures you're informed about the origin, altitude, harvest date, processing method, and farmer cooperative behind every batch.
               </p>
               <div className="flex items-center gap-2">
                 <span className="block w-12 h-1 bg-tadegg-burgundy"></span>
-                <p className="text-sm font-medium text-tadegg-burgundy">Verified & Certified</p>
+                <p className="text-sm font-medium text-tadegg-burgundy">Verified • Certified • Trusted</p>
               </div>
             </div>
           </div>
