@@ -34,7 +34,7 @@ app.use("/gallery", express.static(path.join(__dirname, "public/gallery")));
 const uploadDir = path.join(__dirname, "public/gallery");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-// ✅ Clean route registration
+
 app.use("/api/auth", authRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/gallery", fileRoutes);
@@ -43,7 +43,6 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
 });
 
-// ✅ Frontend serving
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "frontend/dist")));
   app.get("/*", (req, res) => {
