@@ -11,7 +11,7 @@ const specialties = [
     tastes: ["Floral", "Citrus", "Bergamot"],
     altitude: "1,750 - 2,200m",
     process: "Washed & Natural",
-    image: "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?auto=format&fit=crop&q=80"
+    image: "/walichoo.jpg"
   },
   {
     id: "Kumuree",
@@ -21,7 +21,7 @@ const specialties = [
     tastes: ["Berries", "Wine", "Caramel"],
     altitude: "1,550 - 2,200m",
     process: "Washed",
-    image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&q=80"
+    image: "/kumure.jpg"
   }
 ];
 

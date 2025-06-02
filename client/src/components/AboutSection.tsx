@@ -9,7 +9,7 @@ const AboutSection = () => {
           <div className="relative">
             <div className="rounded-lg overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?auto=format&fit=crop&q=80"
+                src="/coffee_image.png"
                 alt="Ethiopian coffee beans"
                 className="w-full h-auto object-cover rounded-lg"
               />

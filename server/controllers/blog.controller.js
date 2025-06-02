@@ -178,3 +178,15 @@ export const getPostBySlug = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+// Get latest posts (for homepage)
+export const latest = async (req, res) => {
+  try {
+    const posts = await BlogPost.find({ status: "published" })
+      .sort({ createdAt: -1 })
+      .limit(3);
+    res.status(200).json({ success: true, posts });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};

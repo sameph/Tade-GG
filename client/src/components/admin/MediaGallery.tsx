@@ -145,7 +145,7 @@ export default function MediaGallery({ onBack }: MediaGalleryProps) {
       form.append("alt", upload.alt.trim());
       form.append("category", upload.category);
 
-      const res = await fetch(`${API}/api/gallery/upload`, {
+      const res = await fetch(`${API}/api/gallery/image/upload`, {
         method: "POST",
         body: form,
         credentials: "include",
