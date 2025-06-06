@@ -26,34 +26,29 @@ if (!fs.existsSync(galleryPath)) fs.mkdirSync(galleryPath, { recursive: true });
 
 app.use("/gallery", express.static(galleryPath));
 
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/blogs", blogRoutes);
+app.use("/api/gallery", fileRoutes);
+
+// Serve frontend in production
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "frontend/dist")));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
+  });
+}
+
+// Error handler
+app.use((err, req, res, next) => {
+  res.status(err.statusCode || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+  });
+});
 
 // Start server
 const server = app.listen(PORT, async () => {
   await connectDB();
   console.log(`Server running on port ${PORT}`);
 });
-
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/blogs", blogRoutes);
-app.use("/api/gallery", fileRoutes);
-
-
-app.use(express.static(path.join(__dirname, '/frontend/dist')));
-
-app.get('*name', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
-});
-
-// Error handler
-app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
-  res.status(statusCode).json({
-    success: false,
-    statusCode,
-    message,
-  });
-});
-
-

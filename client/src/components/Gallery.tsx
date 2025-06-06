@@ -14,7 +14,7 @@ const categories = [
 type GalleryImage = {
   _id: string;
   filename: string;
-  url: string;
+  url: string; 
   alt: string;
   category: string;
 };
@@ -24,12 +24,10 @@ const Gallery = () => {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  const API = import.meta.env.VITE_API_URL;
-
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const res = await axios.get(`${API}/api/gallery`, {
+        const res = await axios.get("/api/gallery", {
           params: { page: 1, limit: 30 },
         });
         if (res.data.success) {
@@ -88,7 +86,7 @@ const Gallery = () => {
                   onClick={() => setSelectedImage(image._id)}
                 >
                   <img
-                    src={`${API}/api/gallery/${image.filename}`}
+                    src={`api/gallery/${image.filename}`}
                     alt={image.alt}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />

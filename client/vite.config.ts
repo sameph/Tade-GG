@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     proxy: {
       "/api": {
-        target: "https://tade-gg.onrender.com",
+        target: "http://localhost:5000",
         secure: false
       },
     },
