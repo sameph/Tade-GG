@@ -5,7 +5,7 @@ const galleryImageSchema = new mongoose.Schema({
   url: { type: String, required: true },
   alt: { type: String, required: true },
   category: { type: String, required: true, index: true },
-  size: { type: Number, required: true }, // in bytes
+  size: { type: Number, required: true }, 
   mimeType: { type: String, required: true },
 }, { timestamps: true });
 

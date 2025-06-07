@@ -42,6 +42,7 @@ const blogPostSchema = new mongoose.Schema({
   mainImage: {
     url: {
       type: String,
+      default: '/blog/placeholder-image.jpg',
     },
   }
 }, {
