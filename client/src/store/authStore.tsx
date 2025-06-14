@@ -33,9 +33,7 @@ interface AuthStore {
 }
 
 const API_URL =
-  import.meta.env.MODE === "development"
-    ? "/api/auth"
-    : "/api/auth";
+  `${import.meta.env.VITE_API_URL ?? "http://localhost:5000"}/api/auth`;
 
 axios.defaults.withCredentials = true;
 

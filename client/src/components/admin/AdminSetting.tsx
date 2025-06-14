@@ -53,14 +53,15 @@ const AdminSettings = ({ onBack }: { onBack?: () => void }) => {
   const [error, setError] = useState<string | null>(null);
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
   const [showDialog, setShowDialog] = useState(false);
-
+  
   const { user } = useAuthStore();
-
+  const BASE_URL = import.meta.env.VITE_API_URL;
+  
   useEffect(() => {
     const fetchAdminUsers = async () => {
       try {
         setIsLoading(true);
-        const { data } = await axios.get("/api/auth/users/admins", {
+        const { data } = await axios.get(`${BASE_URL}/api/auth/users/admins`, {
           withCredentials: true,
         });
 

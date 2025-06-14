@@ -40,7 +40,7 @@ const Recommended = ({ currentPostSlug }: RecommendedProps) => {
     const fetchRecommendedPosts = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`/api/blogs/recommended?exclude=${currentPostSlug}&limit=3`);
+        const response = await fetch(`${BASE_URL}/api/blogs/recommended?exclude=${currentPostSlug}&limit=3`);
         
         if (!response.ok) {
           throw new Error("Failed to fetch recommended posts");

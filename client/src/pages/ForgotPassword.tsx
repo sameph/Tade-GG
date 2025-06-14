@@ -26,6 +26,8 @@ const ForgotPassword = ({ onClose }: ForgotPasswordProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -38,7 +40,7 @@ const ForgotPassword = ({ onClose }: ForgotPasswordProps) => {
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/auth/forgot-password", {
+      const res = await fetch(`${BASE_URL}/api/auth/forgot-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

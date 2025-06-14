@@ -25,12 +25,13 @@ const Gallery = () => {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchImages = async () => {
       try {
         setIsLoading(true);
-        const res = await axios.get("/api/gallery", {
+        const res = await axios.get(`${BASE_URL}/api/gallery`, {
           params: { page: 1, limit: 30 },
         });
         if (res.data.success) {

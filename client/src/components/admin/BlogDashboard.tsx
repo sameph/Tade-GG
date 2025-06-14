@@ -49,12 +49,13 @@ const BlogDashboard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   const navigate = useNavigate();
 
   const fetchPosts = useCallback(async () => {
     try {
-      const response = await fetch("/api/blogs");
+      const response = await fetch(`${BASE_URL}/api/blogs`);
       if (!response.ok) throw new Error("Failed to fetch blog posts");
       const data = await response.json();
       if (data.success && data.posts) {

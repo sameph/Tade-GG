@@ -164,8 +164,8 @@ const BlogPostEditor: React.FC<BlogPostEditorProps> = ({
 
       const method = editedPost._id ? "PUT" : "POST";
       const url = editedPost._id
-        ? `/api/blogs/${editedPost.slug}`
-        : "/api/blogs/create";
+        ? `${BASE_URL}/api/blogs/${editedPost.slug}`
+        : `${BASE_URL}/api/blogs/create`;
 
       const response = await fetch(url, {
         method,

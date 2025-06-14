@@ -74,7 +74,7 @@ const BlogPost = () => {
     const fetchPost = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`/api/blogs/${slug}`);
+        const response = await fetch(`${BASE_URL}/api/blogs/${slug}`);
 
         if (!response.ok) {
           if (response.status === 404) {
