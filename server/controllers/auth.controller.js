@@ -9,7 +9,6 @@ import transporter from "../config/nodemailer.js";
 import { PASSWORD_RESET_EMAIL_TEMPLATE, VERIFICATION_EMAIL_TEMPLATE, WELCOME_EMAIL_TEMPLATE } from "../mailtrap/emailTemplates.js";
 import { generateStrongPassword } from "../utils/helper.js";
 
-// ... (keep all your existing functions)
 
 export const getAllUsers = async (req, res) => {
 	try {
