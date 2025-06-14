@@ -15,6 +15,7 @@ const BlogList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const containerRef = useRef(null);
+  const BASE_URL = import.meta.env.VITE_API_URL; 
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -181,7 +182,7 @@ const BlogList = () => {
               {post.mainImage?.url && (
                 <div className="h-56 overflow-hidden">
                   <img 
-                    src={post.mainImage.url} 
+                    src={`${BASE_URL}${post.mainImage.url}`}
                     alt={post.title} 
                     className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
                     loading="lazy"

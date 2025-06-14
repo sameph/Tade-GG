@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Coffee, FileText, Images, Users } from "lucide-react";
+import { Plus, FileText, Images, Users } from "lucide-react";
 import AdminSettings from "./AdminSetting";
 import { UserProfile } from "./UserProfile";
 import { toast } from "react-toastify";
@@ -41,22 +41,8 @@ const BlogDashboard = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activePost, setActivePost] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedPost, setEditedPost] = useState<BlogPost>({
-    _id: "",
-    title: "",
-    excerpt: "",
-    content: "",
-    author: "",
-    category: "",
-    tags: [],
-    mainImage: { url: "" },
-    status: "draft",
-    slug: "",
-    createdAt: "",
-    updatedAt: "",
-  });
+  const [activePost, setActivePost] = useState<BlogPost | null>(null);
   const [activeTab, setActiveTab] = useState<string>("posts");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -65,12 +51,6 @@ const BlogDashboard = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const navigate = useNavigate();
-
-  interface MainImage {
-  url: string;
-  alt?: string;
-  caption?: string;
-}
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -90,25 +70,25 @@ const BlogDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
 
   const handleEditPost = (post: BlogPost) => {
-    setEditedPost({ ...post, mainImage: post.mainImage || { url: "" } });
+    setActivePost(post);
     setIsEditing(true);
-    setActivePost(post._id);
+    setActiveTab("posts");
   };
 
   const handleNewPost = () => {
-    setEditedPost({
+    setActivePost({
       _id: "",
       title: "",
       excerpt: "",
       content: "",
-      author: "",
+      author: "current_user_id", // Replace with actual user ID
       category: "",
       tags: [],
       mainImage: { url: "" },
@@ -118,81 +98,7 @@ const BlogDashboard = () => {
       updatedAt: new Date().toISOString(),
     });
     setIsEditing(true);
-    setActivePost(null);
     setActiveTab("posts");
-  };
-
-  const handleSavePost = async () => {
-    try {
-      const method = activePost ? "PUT" : "POST";
-      const url = activePost
-        ? `/api/blogs/${editedPost.slug}`
-        : "/api/blogs/create";
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...editedPost, status: "draft" }), // Save as draft
-      });
-
-      if (!response.ok) throw new Error("Failed to save post");
-      const data = await response.json();
-
-      setPosts((prevPosts) =>
-        activePost
-          ? prevPosts.map((post) =>
-              post._id === activePost ? data.post : post
-            )
-          : [data.post, ...prevPosts]
-      );
-      toast.success(
-        `"${data.post.title}" has been ${activePost ? "updated" : "created"}.`,
-        toastOptions
-      );
-
-      setIsEditing(false);
-      setActivePost(null);
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to save post",
-        toastOptions
-      );
-    }
-  };
-
-  const handlePublishPost = async () => {
-    try {
-      const method = editedPost._id ? "PUT" : "POST";
-      const url = editedPost._id
-        ? `/api/blogs/${editedPost.slug}`
-        : "/api/blogs/create";
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...editedPost, status: "published" }), // Save as published directly
-      });
-
-      if (!response.ok) throw new Error("Failed to publish post");
-      const data = await response.json();
-
-      setPosts((prevPosts) =>
-        editedPost._id
-          ? prevPosts.map((post) =>
-              post._id === editedPost._id ? data.post : post
-            )
-          : [data.post, ...prevPosts]
-      );
-
-      toast.success(`"${data.post.title}" is now published!`, toastOptions);
-      setIsEditing(false);
-      setActivePost(null);
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to publish post",
-        toastOptions
-      );
-    }
   };
 
   const handleDeletePost = (id: string) => {
@@ -220,7 +126,6 @@ const BlogDashboard = () => {
       }
 
       setPosts((prev) => prev.filter((p) => p._id !== selectedPostId));
-
       toast.success(`"${post.title}" has been removed.`, toastOptions);
     } catch (err) {
       toast.error(
@@ -233,25 +138,14 @@ const BlogDashboard = () => {
     }
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    if (name === "tags") {
-      setEditedPost({
-        ...editedPost,
-        [name]: value.split(",").map((tag) => tag.trim()),
-      });
-    } else if (name === "mainImage.url") {
-      setEditedPost({
-        ...editedPost,
-        mainImage: { ...editedPost.mainImage, url: value },
-      });
-    } else {
-      setEditedPost({ ...editedPost, [name]: value });
-    }
+  const handleEditorSuccess = (updatedPost: BlogPost, isNew: boolean) => {
+    setPosts(prevPosts => 
+      isNew 
+        ? [updatedPost, ...prevPosts] 
+        : prevPosts.map(p => p._id === updatedPost._id ? updatedPost : p)
+    );
+    setIsEditing(false);
+    setActivePost(null);
   };
 
   const handleBackToPosts = () => setActiveTab("posts");
@@ -308,7 +202,7 @@ const BlogDashboard = () => {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
           <div className="flex items-center">
             <div
-              className="] rounded-full mr-4 shadow-lg cursor-pointer transition-transform hover:scale-105 hover:shadow-xl duration-300 w-14 h-14 flex items-center justify-center"
+              className="rounded-full mr-4 shadow-lg cursor-pointer transition-transform hover:scale-105 hover:shadow-xl duration-300 w-14 h-14 flex items-center justify-center"
               onClick={() => navigate("/")}
             >
               <img
@@ -434,7 +328,7 @@ const BlogDashboard = () => {
                       className={`px-3 py-1 rounded-md ${
                         currentPage === i + 1
                           ? "bg-tadegg-burgundy text-white"
-                          : "bg-gray-200"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                       }`}
                     >
                       {i + 1}
@@ -444,41 +338,65 @@ const BlogDashboard = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="media" className="mt-0">
+            <TabsContent value="media">
               <MediaGallery
                 onBack={handleBackToPosts}
               />
             </TabsContent>
 
             <TabsContent value="settings">
-              <AdminSettings onBack={handleBackToPosts} />
+              <AdminSettings />
             </TabsContent>
           </Tabs>
         ) : (
           <BlogPostEditor
-            post={editedPost}
-            onChange={handleInputChange}
-            onSave={handleSavePost}
-            onPublish={handlePublishPost}
-            onCancel={() => setIsEditing(false)}
-            onFormat={() => {}}
+            post={activePost || {
+              _id: "",
+              title: "",
+              excerpt: "",
+              content: "",
+              author: "",
+              category: "",
+              tags: [],
+              mainImage: { url: "" },
+              status: "draft",
+              slug: "",
+              createdAt: "",
+              updatedAt: "",
+            }}
+            onCancel={() => {
+              setIsEditing(false);
+              setActivePost(null);
+            }}
+            onSuccess={handleEditorSuccess}
+            isEditing={!!activePost?._id}
           />
         )}
       </div>
 
-      {/* Delete Dialog */}
+      {/* Confirm Delete Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>This action cannot be undone.</DialogDescription>
+            <DialogTitle>Delete Blog Post</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this post? This action cannot be undone.
+            </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={isDeleting}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
-              Delete
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

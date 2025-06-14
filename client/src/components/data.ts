@@ -59,16 +59,4 @@ export const achievements: Achievement[] = [
   },
 ];
 
-// Gallery
-export const gallery: GalleryItem[] = [
-  { id: 1, category: "farming", alt: "Contributions",   src: "/gallery/gallery-9.jpg" },
-  { id: 2, category: "farming", alt: "Contributions",   src: "/gallery/gallery-10.jpg" },
-  { id: 3, category: "landscape", alt: "contributions",   src: "/gallery/gallery-3.jpg" },
-  { id: 4, category: "landscape", alt: "contributions",   src: "/gallery/gallery-4.jpg" },
-  { id: 5, category: "farming", alt: "Tade gg with farmers",   src: "/gallery/gallery-5.jpg" },
-  { id: 6, category: "landscape", alt: "Contributions",   src: "/gallery/gallery-6.jpg" },
-  { id: 7, category: "landscape", alt: "Contributions",   src: "/gallery/gallery-7.jpg" },
-  { id: 8, category: "landscape", alt: "Contributions",   src: "/gallery/gallery-8.jpg" },
-  { id: 9, category: "culture", alt: "contributions",   src: "/gallery/gallery-2.jpg" },
-  { id: 10, category: "landscape", alt: "Tade GG networking",   src: "/gallery/gallery-1.jpg" },
-];
+

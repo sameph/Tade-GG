@@ -1,6 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
 import { Calendar, Tag, Edit, Trash2 } from 'lucide-react';
 import { BlogPost } from '@/types/blog';
 import { formatBlogDate } from '@/hooks/useBlog';
@@ -12,21 +19,34 @@ interface BlogPostCardProps {
 }
 
 const BlogPostCard = ({ post, onEdit, onDelete }: BlogPostCardProps) => {
+  // Fallback image if mainImage is missing
+  const fallbackImage = '/placeholder-image.jpg';
+  const baseUrl = import.meta.env.VITE_API_URL; 
+
+  const imageUrl = post.mainImage?.url
+  ? post.mainImage.url.startsWith('http')
+    ? post.mainImage.url
+    : `${baseUrl}${post.mainImage.url}`
+  : fallbackImage;
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 animate-fade-in border-none shadow-md bg-white/80">
       <div className="relative h-48 overflow-hidden">
         <img 
-          src={post.mainImage.url} 
+          src={imageUrl}
           alt={post.title} 
           className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
         <div className="absolute top-2 right-2">
-          <Badge variant={post.status === 'published' ? 'default' : 'secondary'} className={`${
-            post.status === 'published' 
-              ? 'bg-emerald-500 hover:bg-emerald-600' 
-              : 'bg-amber-500 hover:bg-amber-600'
-          } font-medium shadow-sm`}>
+          <Badge
+            variant={post.status === 'published' ? 'default' : 'secondary'}
+            className={`${
+              post.status === 'published' 
+                ? 'bg-emerald-500 hover:bg-emerald-600' 
+                : 'bg-amber-500 hover:bg-amber-600'
+            } font-medium shadow-sm`}
+          >
             {post.status === 'published' ? 'Published' : 'Draft'}
           </Badge>
         </div>

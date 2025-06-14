@@ -24,7 +24,7 @@ const toastOptions = {
   draggable: true,
   theme: "colored" as const,
 };
-// Type definition for BlogPost based on your Mongoose schema
+
 interface BlogPost {
   slug: string;
   title: string;
@@ -41,7 +41,6 @@ interface BlogPost {
   updatedAt: string;
 }
 
-// Helper function to format date
 const formatBlogDate = (dateString: string) => {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", {
@@ -51,21 +50,13 @@ const formatBlogDate = (dateString: string) => {
   });
 };
 
-const ChevronUp = ({
-  size,
-  className,
-}: {
-  size: number;
-  className?: string;
-}) => {
-  return (
-    <ChevronDown className={`rotate-180 ${className || ""}`} size={size} />
-  );
-};
+const ChevronUp = ({ size, className }: { size: number; className?: string }) => (
+  <ChevronDown className={`rotate-180 ${className || ""}`} size={size} />
+);
 
-const ChevronRight = ({ size }: { size: number }) => {
-  return <ChevronLeft className="rotate-180" size={size} />;
-};
+const ChevronRight = ({ size }: { size: number }) => (
+  <ChevronLeft className="rotate-180" size={size} />
+);
 
 const BlogPost = () => {
   const { slug } = useParams();
@@ -75,8 +66,9 @@ const BlogPost = () => {
   const [error, setError] = useState<string | null>(null);
   const [showFloatingNav, setShowFloatingNav] = useState(false);
 
+  const BASE_URL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
-    // Scroll to top when post loads
     window.scrollTo(0, 0);
 
     const fetchPost = async () => {
@@ -110,13 +102,8 @@ const BlogPost = () => {
 
     fetchPost();
 
-    // Check for scroll position to show floating nav
     const handleScroll = () => {
-      if (window.scrollY > 300) {
-        setShowFloatingNav(true);
-      } else {
-        setShowFloatingNav(false);
-      }
+      setShowFloatingNav(window.scrollY > 300);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -143,11 +130,9 @@ const BlogPost = () => {
                 <Skeleton className="h-6 w-32 mb-4" />
                 <Skeleton className="h-10 w-3/4 mb-6" />
                 <Skeleton className="h-6 w-48 mb-8 pb-8" />
-
                 <div className="aspect-[16/9] mb-8">
                   <Skeleton className="h-full w-full rounded-lg" />
                 </div>
-
                 <div className="space-y-4 mb-8">
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-full" />
@@ -202,9 +187,9 @@ const BlogPost = () => {
       </div>
     );
   }
+
   return (
     <div className="min-h-screen relative">
-      {/* ... (keep all the existing JSX above the content section) */}
       <div
         className={`fixed z-40 top-4 left-4 transition-opacity duration-300 ${
           showFloatingNav ? "opacity-0" : "opacity-100"
@@ -222,7 +207,6 @@ const BlogPost = () => {
         </Link>
       </div>
 
-      {/* Floating navigation */}
       <div
         className={`fixed z-40 bottom-5 left-1/2 transform -translate-x-1/2 transition-all duration-500 ${
           showFloatingNav
@@ -250,7 +234,7 @@ const BlogPost = () => {
             className="p-2 rounded-full hover:bg-tadegg-cream/50 transition-colors"
             title="Back to Top"
           >
-            <ChevronUp size={18} className="" />
+            <ChevronUp size={18} />
           </button>
         </div>
       </div>
@@ -259,7 +243,7 @@ const BlogPost = () => {
         <ScrollReveal direction="bottom" duration={900}>
           <div className="h-[40vh] md:h-[50vh] relative">
             <img
-              src={post.mainImage.url}
+              src={`${BASE_URL}${post.mainImage.url}`}
               alt={post.title}
               className="w-full h-full object-cover"
             />
@@ -367,237 +351,15 @@ const BlogPost = () => {
                   </div>
                 </ScrollReveal>
 
-                {/* Reading Progress Bar */}
-                <div className="fixed top-0 left-0 h-1 bg-tadegg-burgundy z-50 reading-progress-bar" />
+                <div className="fixed top-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-tadegg-cream to-transparent z-40" />
               </div>
             </div>
           </article>
-
-          <Recommended currentPostSlug={post.slug} />
         </div>
+
+        <Recommended currentPostSlug={post.slug} />
+        <Footer />
       </div>
-
-      <Footer />
-
-      {/* ... (keep all the remaining JSX) */}
-
-      <style>
-        {`
-          .reading-progress-bar {
-            width: 0%;
-            transition: width 0.2s ease;
-          }
-
-          /* React Quill Content Styles */
-          .react-quill-content {
-            font-family: inherit;
-            line-height: 1.6;
-            color: #5a4a42cc; /* tadegg-brown/90 */
-          }
-
-          .react-quill-content h1,
-          .react-quill-content h2,
-          .react-quill-content h3,
-          .react-quill-content h4,
-          .react-quill-content h5,
-          .react-quill-content h6 {
-            font-family: serif;
-            color: #2a5c45; /* tadegg-green */
-            margin-top: 1.5em;
-            margin-bottom: 0.75em;
-            font-weight: 600;
-          }
-
-          .react-quill-content h1 { font-size: 2.25rem; }
-          .react-quill-content h2 { font-size: 1.875rem; }
-          .react-quill-content h3 { font-size: 1.5rem; }
-          .react-quill-content h4 { font-size: 1.25rem; }
-          .react-quill-content h5 { font-size: 1.125rem; }
-          .react-quill-content h6 { font-size: 1rem; }
-
-          .react-quill-content p {
-            margin-bottom: 1.25em;
-            line-height: 1.7;
-          }
-
-          .react-quill-content a {
-            color: #7a3b2e; /* tadegg-burgundy */
-            text-decoration: underline;
-            transition: color 0.2s;
-          }
-
-          .react-quill-content a:hover {
-            color: #5a2a20; /* darker burgundy */
-          }
-
-          .react-quill-content ul,
-          .react-quill-content ol {
-            margin-bottom: 1.25em;
-            padding-left: 1.5em;
-          }
-
-          .react-quill-content ul {
-            list-style-type: disc;
-          }
-
-          .react-quill-content ol {
-            list-style-type: decimal;
-          }
-
-          .react-quill-content li {
-            margin-bottom: 0.5em;
-          }
-
-          .react-quill-content blockquote {
-            border-left: 4px solid #e8d5b5; /* tadegg-cream */
-            padding-left: 1em;
-            margin-left: 0;
-            margin-right: 0;
-            margin-bottom: 1.25em;
-            font-style: italic;
-            color: #5a4a42aa; /* tadegg-brown with opacity */
-          }
-
-          .react-quill-content pre {
-            background-color: #f8f4ec; /* tadegg-offWhite */
-            padding: 1em;
-            border-radius: 0.5em;
-            overflow-x: auto;
-            margin-bottom: 1.25em;
-            font-family: monospace;
-          }
-
-          .react-quill-content code {
-            font-family: monospace;
-            background-color: #f8f4ec; /* tadegg-offWhite */
-            padding: 0.2em 0.4em;
-            border-radius: 0.3em;
-            font-size: 0.9em;
-          }
-
-          .react-quill-content img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 0.5em;
-            margin: 1.5em 0;
-          }
-
-          .react-quill-content iframe {
-            width: 100%;
-            min-height: 400px;
-            border: none;
-            margin: 1.5em 0;
-            border-radius: 0.5em;
-          }
-
-          .react-quill-content .ql-video {
-            width: 100%;
-            min-height: 400px;
-            border: none;
-            margin: 1.5em 0;
-            border-radius: 0.5em;
-          }
-
-          .react-quill-content .ql-align-center {
-            text-align: center;
-          }
-
-          .react-quill-content .ql-align-right {
-            text-align: right;
-          }
-
-          .react-quill-content .ql-align-justify {
-            text-align: justify;
-          }
-
-          .react-quill-content .ql-indent-1 {
-            padding-left: 3em;
-          }
-
-          .react-quill-content .ql-indent-2 {
-            padding-left: 6em;
-          }
-
-          .react-quill-content .ql-indent-3 {
-            padding-left: 9em;
-          }
-
-          .react-quill-content .ql-indent-4 {
-            padding-left: 12em;
-          }
-
-          .react-quill-content .ql-indent-5 {
-            padding-left: 15em;
-          }
-
-          .react-quill-content .ql-indent-6 {
-            padding-left: 18em;
-          }
-
-          .react-quill-content .ql-indent-7 {
-            padding-left: 21em;
-          }
-
-          .react-quill-content .ql-indent-8 {
-            padding-left: 24em;
-          }
-
-          .react-quill-content .ql-syntax {
-            background-color: #23241f;
-            color: #f8f8f2;
-            padding: 1em;
-            border-radius: 0.3em;
-            overflow: visible;
-            white-space: pre-wrap;
-            margin-bottom: 1.25em;
-          }
-
-          .react-quill-content table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 1.5em 0;
-            border-radius: 0.5em;
-            overflow: hidden;
-          }
-
-          .react-quill-content table td,
-          .react-quill-content table th {
-            border: 1px solid #e8d5b5; /* tadegg-cream */
-            padding: 0.75em;
-          }
-
-          .react-quill-content table th {
-            background-color: #f1e7d3; /* lighter cream */
-            font-weight: 600;
-            text-align: left;
-          }
-        `}
-      </style>
-
-      <style>
-        {`
-          .reading-progress-bar {
-            width: 0%;
-            transition: width 0.2s ease;
-          }
-        `}
-      </style>
-
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-          // Reading progress
-          window.addEventListener('scroll', () => {
-            const totalHeight = document.body.scrollHeight - window.innerHeight;
-            const progress = (window.scrollY / totalHeight) * 100;
-            const bar = document.querySelector('.reading-progress-bar');
-            if (bar) bar.style.width = progress + '%';
-          });
-        `,
-        }}
-      />
-
-      {/* ... (keep the script tag and closing tags) */}
     </div>
   );
 };

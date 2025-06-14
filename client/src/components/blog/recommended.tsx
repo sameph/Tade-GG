@@ -34,6 +34,7 @@ interface RecommendedProps {
 const Recommended = ({ currentPostSlug }: RecommendedProps) => {
   const [recommendedPosts, setRecommendedPosts] = useState<RecommendedPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const BASE_URL = import.meta.env.VITE_API_URL; 
 
   useEffect(() => {
     const fetchRecommendedPosts = async () => {
@@ -105,7 +106,7 @@ const Recommended = ({ currentPostSlug }: RecommendedProps) => {
               <div className="h-40 overflow-hidden">
                 {post.mainImage?.url ? (
                   <img
-                    src={post.mainImage.url}
+                    src={`${BASE_URL}${post.mainImage.url}`}
                     alt={post.title}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />

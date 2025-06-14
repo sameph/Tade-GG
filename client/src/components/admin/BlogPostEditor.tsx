@@ -7,8 +7,7 @@ import { PostSettings } from "./PostSettings";
 import PostHeader from "./PostHeader";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { upload } from "@imagekit/react";
-import {toast} from 'react-toastify';
+import { toast } from "react-toastify";
 
 const toastOptions = {
   position: "top-center" as const,
@@ -36,40 +35,35 @@ export interface BlogPost {
   };
   createdAt?: string;
   updatedAt?: string;
-  metaTitle?: string;
-  metaDescription?: string;
-  featured?: boolean;
 }
 
 type BlogPostEditorProps = {
   post: Partial<BlogPost>;
-  onChange: (e: { target: { name: string; value: string | string[] } }) => void;
   onCancel: () => void;
-  onSave?: () => void;
-  onPublish?: () => void;
-  onFormat?: () => void;
+  onSuccess?: (post: BlogPost, isNew: boolean) => void;
   isEditing?: boolean;
 };
 
 const BlogPostEditor: React.FC<BlogPostEditorProps> = ({
-  post,
-  onChange,
+  post: initialPost,
   onCancel,
-  onSave,
-  onPublish,
+  onSuccess,
   isEditing = false,
 }) => {
-  // const navigate = useNavigate();
-  // const { user } = useAuthStore();
+  const BASE_URL = import.meta.env.VITE_API_URL;
+  const [editedPost, setEditedPost] = useState<Partial<BlogPost>>(initialPost);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(() => {
+    const imageUrl = initialPost.mainImage?.url || null;
+    if (!imageUrl) return null;
 
-  const tagsString = Array.isArray(post.tags)
-    ? post.tags.join(", ")
-    : post.tags || "";
+    return imageUrl.startsWith("http") ? imageUrl : `${BASE_URL}${imageUrl}`;
+  });
+
+  const tagsString = Array.isArray(editedPost.tags)
+    ? editedPost.tags.join(", ")
+    : editedPost.tags || "";
 
   const quillModules = {
     toolbar: [
@@ -82,69 +76,139 @@ const BlogPostEditor: React.FC<BlogPostEditorProps> = ({
     ],
   };
 
-  const getImagekitAuth = async () => {
-    const res = await fetch("/api/blogs/upload-auth");
-    if (!res.ok) throw new Error("ImageKit auth failed");
-    return await res.json();
-  };
-
-  const uploadImage = async (file: File): Promise<string> => {
-    setIsUploading(true);
-    setUploadProgress(0);
-    try {
-      const auth = await getImagekitAuth();
-      const { url } = await upload({
-        file,
-        fileName: `${Date.now()}-${file.name}`,
-        ...auth,
-        onProgress: (e) =>
-          setUploadProgress(Math.round((e.loaded / e.total) * 100)),
-      });
-      return url;
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const generateSlug = (title: string) =>
-    title
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error( "Maximum size is 2MB.",
-        toastOptions);
+    // Check file type
+    const validTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
+    if (!validTypes.includes(file.type)) {
+      toast.error(
+        "Only image files allowed (jpeg, jpg, png, gif, webp)",
+        toastOptions
+      );
+      return;
+    }
+
+    // Check file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Maximum size is 5MB", toastOptions);
       return;
     }
 
     setSelectedFile(file);
-    setLocalPreview(URL.createObjectURL(file));
+    setPreviewUrl(URL.createObjectURL(file));
   };
 
   const handleRemoveImage = () => {
-    onChange({ target: { name: "mainImage.url", value: "" } });
+    setEditedPost((prev) => ({ ...prev, mainImage: null }));
     setSelectedFile(null);
-    setLocalPreview(null);
+    setPreviewUrl(null);
   };
 
   const handleContentChange = (value: string) => {
-    onChange({ target: { name: "content", value } });
+    setEditedPost((prev) => ({ ...prev, content: value }));
   };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+
+    if (name === "tags") {
+      setEditedPost((prev) => ({
+        ...prev,
+        tags: value.split(",").map((tag) => tag.trim()),
+      }));
+    } else {
+      setEditedPost((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const submitPost = async (finalStatus: "draft" | "published") => {
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+
+      // Append the file if selected
+      if (selectedFile) {
+        formData.append("mainImage", selectedFile);
+      } else if (editedPost.mainImage === null) {
+        // If user removed image, tell backend
+        formData.append("mainImage", "");
+      }
+
+      // Append all other post data EXCEPT status and mainImage
+      Object.entries(editedPost).forEach(([key, value]) => {
+        if (
+          value !== undefined &&
+          key !== "mainImage" &&
+          key !== "status" // skip status here
+        ) {
+          if (Array.isArray(value)) {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, String(value));
+          }
+        }
+      });
+
+      // Always append status explicitly
+      formData.append("status", finalStatus);
+
+      const method = editedPost._id ? "PUT" : "POST";
+      const url = editedPost._id
+        ? `/api/blogs/${editedPost.slug}`
+        : "/api/blogs/create";
+
+      const response = await fetch(url, {
+        method,
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to save post");
+      }
+
+      const data = await response.json();
+      toast.success(
+        `Post ${editedPost._id ? "updated" : "created"} successfully!`,
+        toastOptions
+      );
+
+      if (onSuccess) {
+        onSuccess(data.post, !editedPost._id);
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to save post",
+        toastOptions
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSavePost = () => submitPost("draft");
+  const handlePublishPost = () => submitPost("published");
 
   return (
     <div className="bg-white/90 rounded-xl border border-gray-100 shadow-lg p-6">
       <PostHeader
         onCancel={onCancel}
-        onSave={onSave} // instead of () => handleSave("draft")
-        onPublish={onPublish} // instead of () => handleSave("published")
+        onSave={handleSavePost}
+        onPublish={handlePublishPost}
         isEditing={isEditing}
         isSubmitting={isSubmitting}
+        status={editedPost.status}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
@@ -154,12 +218,11 @@ const BlogPostEditor: React.FC<BlogPostEditorProps> = ({
             <Input
               id="title"
               name="title"
-              value={post.title || ""}
-              onChange={(e) =>
-                onChange({ target: { name: "title", value: e.target.value } })
-              }
+              value={editedPost.title || ""}
+              onChange={handleInputChange}
               placeholder="Enter post title"
               className="text-2xl font-bold"
+              required
             />
           </div>
 
@@ -168,10 +231,8 @@ const BlogPostEditor: React.FC<BlogPostEditorProps> = ({
             <Textarea
               id="excerpt"
               name="excerpt"
-              value={post.excerpt || ""}
-              onChange={(e) =>
-                onChange({ target: { name: "excerpt", value: e.target.value } })
-              }
+              value={editedPost.excerpt || ""}
+              onChange={handleInputChange}
               placeholder="Brief summary"
               rows={3}
             />
@@ -183,25 +244,27 @@ const BlogPostEditor: React.FC<BlogPostEditorProps> = ({
               id="content"
               theme="snow"
               className="flex-1 border border-gray-200 rounded-lg bg-white min-h-[300px] h-[400px]"
-              value={post.content || ""}
+              value={editedPost.content || ""}
               onChange={handleContentChange}
               modules={quillModules}
+              placeholder="Write your post content here..."
             />
           </div>
         </div>
 
         <div className="space-y-6">
           <PostSettings
-            post={post}
-            onChange={onChange}
+            post={editedPost}
+            onChange={handleInputChange}
             tagsString={tagsString}
           />
+
           <FeaturedImageUploader
-            image={localPreview || post.mainImage?.url || ""}
+            image={previewUrl}
             onChange={handleFileChange}
             onRemove={handleRemoveImage}
-            isUploading={isUploading}
-            uploadProgress={uploadProgress}
+            isUploading={isSubmitting}
+            uploadProgress={0} // You can implement progress tracking if needed
           />
         </div>
       </div>

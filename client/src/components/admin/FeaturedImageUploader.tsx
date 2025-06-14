@@ -5,15 +5,12 @@ import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 interface Props {
-  image: string;
+  image: string | null;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemove: () => void;
   isUploading: boolean;
   uploadProgress: number;
-  error?: string | null;
 }
-
-// ... imports remain the same ...
 
 export const FeaturedImageUploader = ({
   image,
@@ -21,7 +18,6 @@ export const FeaturedImageUploader = ({
   onRemove,
   isUploading,
   uploadProgress,
-  error,
 }: Props) => {
   return (
     <Card className="border border-gray-100 shadow-sm">
@@ -36,15 +32,14 @@ export const FeaturedImageUploader = ({
           <Label htmlFor="image-upload" className="font-medium mb-2">
             Select Image
           </Label>
-          
-          {error && <p className="text-sm text-red-500 mb-2">{error}</p>}
 
           <div className="flex justify-center">
             <label
               htmlFor="image-upload"
               className={`relative flex items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer ${
-                image ? "border-green-300 bg-green-50" : 
-                "border-gray-300 hover:border-gray-400 bg-gray-50"
+                image
+                  ? "border-green-300 bg-green-50"
+                  : "border-gray-300 hover:border-gray-400 bg-gray-50"
               }`}
               onClick={(e) => isUploading && e.preventDefault()}
             >
@@ -54,13 +49,15 @@ export const FeaturedImageUploader = ({
                   <p className="text-sm text-gray-500">
                     Click to select an image
                   </p>
-                  <p className="mt-1 text-xs text-gray-500">PNG, JPG (Max 2MB)</p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    JPG, PNG, GIF, WEBP (Max 5MB)
+                  </p>
                 </div>
               )}
               <input
                 id="image-upload"
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                 className="hidden"
                 onChange={onChange}
                 disabled={isUploading}
@@ -84,14 +81,14 @@ export const FeaturedImageUploader = ({
 
           {image && (
             <div className="relative mt-2 rounded-md overflow-hidden border border-gray-200 group">
-              <img 
-                src={image} 
-                alt="Selected preview" 
+              <img
+                src={image}
+                alt="Featured preview"
                 className="w-full h-60 object-cover"
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Button 
-                  variant="destructive" 
+                <Button
+                  variant="destructive"
                   size="sm"
                   onClick={(e) => {
                     e.preventDefault();
